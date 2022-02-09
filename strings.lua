@@ -9,7 +9,7 @@ Here, you can shift and rotate the construction after it has been built.
 
 NOTES:
 - Not every construction can be rearranged.
-- Constructions with bits of road or rail may need readjusting those roads and rails.
+- Constructions with bits of road or rail may need readjusting of those roads and rails.
 			]],
             ["ModName"] = "Construction Mover",
             ["ConId"] = "Con Id = ",
