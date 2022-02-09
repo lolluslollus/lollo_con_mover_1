@@ -9,6 +9,8 @@ Here, you can shift and rotate the construction after it has been built.
 The game will run some checks and it will shift your construction if it thinks it's possible.
 			]],
             ["ModName"] = "Construction Shifter",
+            ["ConId"] = "Id = ",
+            ["IgnoreErrors"] = "Ignore Errors",
             ["OperationOff"] = "Construction shifter OFF",
             ["OperationOn"] = "Construction shifter ON",
             ["ShiftWindowTitle"] ="Construction Shifter",

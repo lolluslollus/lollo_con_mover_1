@@ -36,18 +36,20 @@ local actions = {
         )
     end,
     renameConstruction = function(conId, newName)
+        logger.print('renameConstruction starting, conId =', (conId or 'NIL'), 'newName =', newName or 'NIL')
         if not(edgeUtils.isValidAndExistingId(conId)) then return end
 
+        local cmd = api.cmd.make.setName(conId, newName or '')
         api.cmd.sendCommand(
-            api.cmd.make.setName(conId, newName or ''),
+            cmd,
             function(result, success)
                 logger.print('renameConstruction success = ', success)
-                logger.print('renameConstruction result = ') logger.debugPrint(result)
+                -- logger.print('renameConstruction result = ') logger.debugPrint(result)
             end
         )
     end,
 }
-actions.shiftConstruction = function(conId, newTransf)
+actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
     if not(edgeUtils.isValidAndExistingId(conId)) then
         logger.print('shiftConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
         return
@@ -89,29 +91,42 @@ actions.shiftConstruction = function(conId, newTransf)
     -- proposal.constructionsToRemove:add(constructionId) -- fails to add
     proposal.constructionsToAdd[1] = newCon
 
-    proposal.old2new = {
-        -- [conId] = 1 -- dumps
-        -- [conId] = 0
-        conId, 1
-        -- conId, 0
-    }
+    -- proposal.old2new = {
+    --     -- [conId] = 1 -- dumps
+    --     -- [conId] = 0
+    --     -- conId, 1 -- works but does nothing
+    --     conId, 0
+    --     -- conId, -1
+    -- }
 
     local oldConName = api.engine.getComponent(conId, api.type.ComponentType.NAME)
+    if oldConName then oldConName = oldConName.name else oldConName = nil end
 
     local context = api.type.Context:new()
     context.checkTerrainAlignment = true -- default is false, true gives smoother Z
     context.cleanupStreetGraph = true -- default is false
     context.gatherBuildings = true  -- default is false
-    context.gatherFields = true -- default is true
+    -- context.gatherFields = true -- default is true
     -- context.player = api.engine.util.getPlayer() -- default is -1
+    -- local cmd = api.cmd.make.buildProposal(proposal, context, true) -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway
     api.cmd.sendCommand(
-        api.cmd.make.buildProposal(proposal, context, true), -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway
+        api.cmd.make.buildProposal(proposal, context, isIgnoreErrors), -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway,
         function(result, success)
-            logger.print('shiftConstruction success = ', success)
-            if success then
-                actions.renameConstruction(conId, oldConName)
-            end
-            logger.print('shiftConstruction result = ') logger.debugPrint(result)
+            xpcall(
+                function()
+                    if success then
+                        logger.print('shiftConstruction succeeded')
+                        if result and result.resultEntities and #result.resultEntities == 1 then
+                            logger.print('result.resultEntities[1] =', result.resultEntities[1])
+                            actions.renameConstruction(result.resultEntities[1], oldConName)
+                        end
+                    else
+                        logger.print('shiftConstruction failed')
+                        logger.print('shiftConstruction result = ') logger.debugPrint(result)
+                    end
+                end,
+                logger.errorHandler
+            )
         end
     )
 end
@@ -128,9 +143,9 @@ local function handleEvent(src, id, name, args)
                     1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, 1, 0,
-                    (args.xShift or 0), (args.yShift or 0), (args.zShift or 0), 1
+                    (args[constants.transNames.xShift] or 0), (args[constants.transNames.yShift] or 0), (args[constants.transNames.zShift] or 0), 1
                 }
-                actions.shiftConstruction(args.conId, newTransf)
+                actions.shiftConstruction(args.conId, newTransf, args.isIgnoreErrors)
             elseif name == constants.events.toggle_notaus then
                 logger.print('state before =') logger.debugPrint(stateHelpers.getState())
                 local state = stateHelpers.getState()

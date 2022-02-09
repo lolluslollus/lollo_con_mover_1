@@ -9,16 +9,20 @@ local _warningWindowWithMessageId = 'lollo_con_mover_warning_window_with_message
 local _warningWindowWithStateId = 'lollo_con_mover_warning_window_with_state'
 
 local _texts = {
+    ignoreErrors = _('IgnoreErrors'),
     operationOff = _('OperationOff'),
     operationOn = _('OperationOn'),
+    shiftWindowTitle = _('ShiftWindowTitle'),
     xMinus1 = _('Left'),
     xPlus1 = _('Right'),
     yMinus1 = _('Down'),
     yPlus1 = _('Up'),
-    shiftWindowTitle = _('ShiftWindowTitle'),
 }
 
 local _windowXShift = -200
+local _windowYShift = -50
+
+local isIgnoreErrorsOn = true
 
 local guiHelpers = {
     isShowingWarning = false,
@@ -27,6 +31,15 @@ local guiHelpers = {
         game.gui.setCamera({position[1], position[2], cameraData[3], cameraData[4], cameraData[5]})
     end
 }
+
+local _modifyIgnoreErrorsOnOffButtonLayout = function(layout, isIgnoreErrorsOn)
+    if isIgnoreErrorsOn then
+        layout:addItem(api.gui.comp.ImageView.new('ui/design/components/checkbox_valid.tga'), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+    else
+        layout:addItem(api.gui.comp.ImageView.new('ui/design/components/checkbox_invalid.tga'), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+    end
+    layout:addItem(api.gui.comp.TextView.new(_texts.ignoreErrors), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+end
 
 guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
     local layout = api.gui.layout.BoxLayout.new('VERTICAL')
@@ -41,6 +54,23 @@ guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
 
     layout:addItem(api.gui.comp.TextView.new(text))
 
+    local function addIgnoreErrorsButton()
+        local buttonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
+        _modifyIgnoreErrorsOnOffButtonLayout(buttonLayout, isIgnoreErrorsOn)
+        local button = api.gui.comp.ToggleButton.new(buttonLayout)
+        button:setSelected(isIgnoreErrorsOn, false)
+        button:onToggle(function(isOn) -- isOn is boolean
+            print('toggled; isOn = ', isOn)
+            while buttonLayout:getNumItems() > 0 do
+                local item0 = buttonLayout:getItem(0)
+                buttonLayout:removeItem(item0)
+            end
+            _modifyIgnoreErrorsOnOffButtonLayout(buttonLayout, isOn)
+            button:setSelected(isOn, false)
+            isIgnoreErrorsOn = isOn
+        end)
+        layout:addItem(button, api.gui.util.Alignment.CENTER, api.gui.util.Alignment.VERTICAL)
+    end
     local function addXMinus1Button()
         local buttonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
         buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_left.tga'))
@@ -48,10 +78,10 @@ guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat('xShift', -1.0)
+                funcOfStringAndFloat(constants.transNames.xShift, -1.0, isIgnoreErrorsOn)
             end
         )
-        layout:addItem(button)
+        layout:addItem(button, api.gui.util.Alignment.LEFT, api.gui.util.Alignment.VERTICAL)
     end
     local function addXPlus1Button()
         local buttonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
@@ -60,10 +90,10 @@ guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat('xShift', 1.0)
+                funcOfStringAndFloat(constants.transNames.xShift, 1.0, isIgnoreErrorsOn)
             end
         )
-        layout:addItem(button)
+        layout:addItem(button, api.gui.util.Alignment.RIGHT, api.gui.util.Alignment.VERTICAL)
     end
     local function addYMinus1Button()
         local buttonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
@@ -72,10 +102,10 @@ guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat('yShift', -1.0)
+                funcOfStringAndFloat(constants.transNames.yShift, -1.0, isIgnoreErrorsOn)
             end
         )
-        layout:addItem(button)
+        layout:addItem(button, api.gui.util.Alignment.CENTER, api.gui.util.Alignment.VERTICAL)
     end
     local function addYPlus1Button()
         local buttonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
@@ -84,11 +114,12 @@ guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat('yShift', 1.0)
+                funcOfStringAndFloat(constants.transNames.yShift, 1.0, isIgnoreErrorsOn)
             end
         )
-        layout:addItem(button)
+        layout:addItem(button, api.gui.util.Alignment.CENTER, api.gui.util.Alignment.VERTICAL)
     end
+    addIgnoreErrorsButton()
     addXMinus1Button()
     addXPlus1Button()
     addYMinus1Button()
@@ -96,7 +127,7 @@ guiHelpers.showShiftWindow = function(text, funcOfStringAndFloat)
 
     -- window:setHighlighted(true)
     local position = api.gui.util.getMouseScreenPos()
-    window:setPosition(position.x + _windowXShift, position.y)
+    window:setPosition(position.x + _windowXShift, position.y + _windowYShift)
     window:addHideOnCloseHandler()
 end
 
@@ -197,7 +228,7 @@ guiHelpers.initNotausButton = function(isBoardsOn, funcOfBool)
 
     button:setId(_operationOnOffButtonId)
 
-    api.gui.util.getById('gameInfo'):getLayout():addItem(button) -- adds a button in the right place
+    api.gui.util.getById('gameInfo'):getLayout():addItem(button)
 end
 
 return guiHelpers
