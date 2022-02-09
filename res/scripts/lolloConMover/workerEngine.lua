@@ -144,6 +144,13 @@ local function handleEvent(src, id, name, args)
                     0, 0, 1, 0,
                     (args[constants.transNames.xShift] or 0), (args[constants.transNames.yShift] or 0), (args[constants.transNames.zShift] or 0), 1
                 }
+                if args[constants.transNames.rotX] then
+                    newTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
+                elseif args[constants.transNames.rotY] then
+                    newTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
+                elseif args[constants.transNames.rotZ] then
+                    newTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
+                end
                 actions.shiftConstruction(args.conId, newTransf, args.isIgnoreErrors)
             elseif name == constants.events.toggle_notaus then
                 logger.print('state before =') logger.debugPrint(stateHelpers.getState())

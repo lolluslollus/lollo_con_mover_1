@@ -5,12 +5,12 @@ local constants = {
         toggle_notaus = 'toggle_notaus'
     },
     transNames = {
-        xRot = 'xRot',
-        yRot = 'yRot',
-        zRot = 'zRot',
-        xShift = 'xShift',
-        yShift = 'yShift',
-        zShift = 'zShift',
+        rotX = 'rotX',
+        rotY = 'rotY',
+        rotZ = 'rotZ',
+        xShift = 'shiftX',
+        yShift = 'shiftY',
+        zShift = 'shiftY',
     }
 }
 
