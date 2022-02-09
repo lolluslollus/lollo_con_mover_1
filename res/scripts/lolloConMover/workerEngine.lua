@@ -1,3 +1,4 @@
+local arrayUtils = require('lolloConMover.arrayUtils')
 local constants = require('lolloConMover.constants')
 local logger = require ('lolloConMover.logger')
 local stateHelpers = require('lolloConMover.stateHelpers')
@@ -67,6 +68,7 @@ actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
     end
     newParams.seed = oldCon.params.seed + 1
     newCon.params = newParams
+    local paramsBak = arrayUtils.cloneDeepOmittingFields(newParams, {'seed'})
 
     local oldConTransf = transfUtilsUG.new(oldCon.transf:cols(0), oldCon.transf:cols(1), oldCon.transf:cols(2), oldCon.transf:cols(3))
     local newConTransf = transfUtilsUG.mul(oldConTransf, newTransf)
@@ -117,6 +119,14 @@ actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
                         if result and result.resultEntities and #result.resultEntities == 1 then
                             logger.print('result.resultEntities[1] =', result.resultEntities[1])
                             actions.renameConstruction(result.resultEntities[1], oldConName)
+                            if conId == result.resultEntities[1] then
+                                -- UG TODO there is no such thing in the new api
+                                game.interface.upgradeConstruction(
+                                    conId,
+                                    oldCon.fileName,
+                                    paramsBak
+                                )
+                            end
                         end
                     else
                         logger.print('shiftConstruction failed')

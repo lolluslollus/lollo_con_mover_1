@@ -95,7 +95,6 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                utils.getObjectPosition(conId)
                 local pos = utils.getConstructionPosition(conId)
                 if not(pos) then return end
 
