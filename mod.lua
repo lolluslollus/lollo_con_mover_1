@@ -1,5 +1,3 @@
-local constructionHooks = require ("lolloArrivalsDeparturesPredictor.constructionHooks")
-
 function data()
 	return {
 		info = {
@@ -8,13 +6,9 @@ function data()
 			severityRemove = "WARNING",
 			name = _("ModName"),
 			description = _("ModDesc"),
-			tags = { "Track Asset", "Misc", "Script Mod" },
+			tags = { "Asset", "Track Asset", "Misc", "Script Mod" },
 			visible = true,
 			authors = {
-				{
-					name = "badgerrhax",
-					role = "CREATOR"
-				},
                 {
 					name = "lollus",
 					role = "CREATOR"
