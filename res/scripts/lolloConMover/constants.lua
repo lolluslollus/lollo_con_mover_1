@@ -19,7 +19,7 @@ local constants = {
     },
 
     windowXShift = -200,
-    windowYShift = 50,
+    windowYShift = 100,
 }
 
 return constants

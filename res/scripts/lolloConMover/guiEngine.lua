@@ -1,10 +1,10 @@
 -- NOTE that the state must be read-only here coz we are in the GUI thread
 local constants = require('lolloConMover.constants')
-local edgeUtils = require('lolloConMover.edgeUtils')
 local guiHelpers = require('lolloConMover.guiHelpers')
 local logger = require('lolloConMover.logger')
 local stateHelpers = require ('lolloConMover.stateHelpers')
 local transfUtilsUG = require('transf')
+local utils = require('lolloConMover.utils')
 
 
 local function _sendScriptEvent(name, args)
@@ -19,7 +19,7 @@ local function handleEvent(id, name, args)
         local _state = stateHelpers.getState()
         if not(_state.is_on) then return end
 
-        if not(args) or not(edgeUtils.isValidAndExistingId(args)) then return end -- probably redundant
+        if not(args) or not(utils.isValidAndExistingId(args)) then return end -- probably redundant
 
         local con = api.engine.getComponent(args, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.fileName) then return end

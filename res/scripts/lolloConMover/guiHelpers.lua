@@ -1,7 +1,6 @@
 local constants = require('lolloConMover.constants')
-local edgeUtils = require('lolloConMover.edgeUtils')
-local stringUtils = require('lolloConMover.stringUtils')
 local transfUtilsUG = require('transf')
+local utils = require('lolloConMover.utils')
 
 local _operationOnOffButtonId = 'lollo_con_mover_on_off_button'
 local _shiftWindowId = 'lollo_con_mover_shift_window'
@@ -37,7 +36,7 @@ local data = {
 }
 local utils = {
     getConstructionPosition = function(conId)
-        if not(edgeUtils.isValidAndExistingId(conId)) then return end
+        if not(utils.isValidAndExistingId(conId)) then return end
 
         local con = api.engine.getComponent(26391, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.transf) then return end
@@ -96,7 +95,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                edgeUtils.getObjectPosition(conId)
+                utils.getObjectPosition(conId)
                 local pos = utils.getConstructionPosition(conId)
                 if not(pos) then return end
 

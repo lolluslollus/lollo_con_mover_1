@@ -1,14 +1,13 @@
-local arrayUtils = require('lolloConMover.arrayUtils')
 local constants = require('lolloConMover.constants')
-local edgeUtils = require('lolloConMover.edgeUtils')
 local logger = require ('lolloConMover.logger')
 local stateHelpers = require('lolloConMover.stateHelpers')
 local transfUtilsUG = require('transf')
+local utils = require('lolloConMover.utils')
 
 
 local actions = {
     bulldozeConstruction = function(conId)
-        if not(edgeUtils.isValidAndExistingId(conId)) then
+        if not(utils.isValidAndExistingId(conId)) then
             -- logger.print('bulldozeConstruction cannot bulldoze construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
             return
         end
@@ -36,7 +35,7 @@ local actions = {
     end,
     renameConstruction = function(conId, newName)
         logger.print('renameConstruction starting, conId =', (conId or 'NIL'), 'newName =', newName or 'NIL')
-        if not(edgeUtils.isValidAndExistingId(conId)) then return end
+        if not(utils.isValidAndExistingId(conId)) then return end
 
         local cmd = api.cmd.make.setName(conId, newName or '')
         api.cmd.sendCommand(
@@ -49,7 +48,7 @@ local actions = {
     end,
 }
 actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
-    if not(edgeUtils.isValidAndExistingId(conId)) then
+    if not(utils.isValidAndExistingId(conId)) then
         logger.print('shiftConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
         return
     end
