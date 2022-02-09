@@ -1,6 +1,7 @@
 local constants = require('lolloConMover.constants')
+local edgeUtilsDumb = require('lolloConMover.utils')
 local transfUtilsUG = require('transf')
-local utils = require('lolloConMover.utils')
+
 
 local _operationOnOffButtonId = 'lollo_con_mover_on_off_button'
 local _shiftWindowId = 'lollo_con_mover_shift_window'
@@ -36,7 +37,7 @@ local data = {
 }
 local utils = {
     getConstructionPosition = function(conId)
-        if not(utils.isValidAndExistingId(conId)) then return end
+        if not(edgeUtilsDumb.isValidAndExistingId(conId)) then return end
 
         local con = api.engine.getComponent(26391, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.transf) then return end
