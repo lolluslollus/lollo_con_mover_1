@@ -76,12 +76,11 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
     if window == nil then
         window = api.gui.comp.Window.new(_texts.shiftWindowTitle, layout)
         window:setId(_shiftWindowId)
+        window:setSize(api.gui.util.Size.new(360, 360))
     else
         window:setContent(layout)
         window:setVisible(true, false)
     end
-
-    window:setSize(api.gui.util.Size.new(360, 360))
     window:setResizable(true)
 
     local _y0 = 15
