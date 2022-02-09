@@ -81,8 +81,8 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         window:setVisible(true, false)
     end
 
-    -- window:setResizable(true)
     window:setSize(api.gui.util.Size.new(360, 360))
+    window:setResizable(true)
 
     local _y0 = 15
 
