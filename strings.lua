@@ -4,7 +4,7 @@ function data()
             ["ModDesc"] =
                 [[
 Turn this on and off from the bottom bar.
-When it is on and you select a construction, a popup will appear.
+When it is on and you select certain constructions, a popup will appear.
 Here, you can shift and rotate the construction after it has been built.
 
 NOTES:
