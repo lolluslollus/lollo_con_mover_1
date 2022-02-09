@@ -145,7 +145,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat(constants.transNames.xShift, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                funcOfStringAndFloat(constants.transNames.shiftX, -utils.getLinearShift(), data.isIgnoreErrorsOn)
             end
         )
         layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 120, 100, 40))
@@ -157,7 +157,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat(constants.transNames.xShift, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                funcOfStringAndFloat(constants.transNames.shiftX, utils.getLinearShift(), data.isIgnoreErrorsOn)
             end
         )
         layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 120, 100, 40))
@@ -169,7 +169,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat(constants.transNames.yShift, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                funcOfStringAndFloat(constants.transNames.shiftY, -utils.getLinearShift(), data.isIgnoreErrorsOn)
             end
         )
         layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 160, 100, 40))
@@ -181,7 +181,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat(constants.transNames.yShift, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                funcOfStringAndFloat(constants.transNames.shiftY, utils.getLinearShift(), data.isIgnoreErrorsOn)
             end
         )
         layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 80, 100, 40))
@@ -193,7 +193,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat(constants.transNames.zShift, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                funcOfStringAndFloat(constants.transNames.shiftZ, -utils.getLinearShift(), data.isIgnoreErrorsOn)
             end
         )
         layout:addItem(button, api.gui.util.Rect.new(280, _y0 + 160, 100, 40))
@@ -205,7 +205,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.Button.new(buttonLayout, true)
         button:onClick(
             function()
-                funcOfStringAndFloat(constants.transNames.zShift, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                funcOfStringAndFloat(constants.transNames.shiftZ, utils.getLinearShift(), data.isIgnoreErrorsOn)
             end
         )
         layout:addItem(button, api.gui.util.Rect.new(280, _y0 + 80, 100, 40))

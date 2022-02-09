@@ -13,9 +13,9 @@ local constants = {
         rotX = 'rotX',
         rotY = 'rotY',
         rotZ = 'rotZ',
-        xShift = 'shiftX',
-        yShift = 'shiftY',
-        zShift = 'shiftY',
+        shiftX = 'shiftX',
+        shiftY = 'shiftY',
+        shiftZ = 'shiftZ',
     },
 
     windowXShift = -200,
