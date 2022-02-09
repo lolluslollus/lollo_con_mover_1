@@ -4,14 +4,18 @@ function data()
             ["ModDesc"] =
                 [[
 Turn this on and off from the bottom bar.
-When turned on and you select a construction, a popup will appear.
+When it is on and you select a construction, a popup will appear.
 Here, you can shift and rotate the construction after it has been built.
-The game will run some checks and it will shift your construction if it thinks it's possible.
+
+NOTES:
+- Not every construction can be rearranged.
+- Constructions with bits of road or rail may need readjusting those roads and rails.
 			]],
             ["ModName"] = "Construction Shifter",
             ["ConId"] = "Con Id = ",
             ["Down"] = "Down",
             ["East"] = "East",
+            ["FineAdjustments"] = "Fine Adjustments",
             ["GoThere"] = "Go There",
             ["IgnoreErrors"] = "Ignore Errors",
             ["North"] = "North",
