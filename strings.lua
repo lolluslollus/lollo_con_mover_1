@@ -10,6 +10,7 @@ The game will run some checks and it will shift your construction if it thinks i
 			]],
             ["ModName"] = "Construction Shifter",
             ["ConId"] = "Id = ",
+            ["GoThere"] = "Go There",
             ["IgnoreErrors"] = "Ignore Errors",
             ["OperationOff"] = "Construction shifter OFF",
             ["OperationOn"] = "Construction shifter ON",

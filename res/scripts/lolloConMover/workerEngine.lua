@@ -3,7 +3,6 @@ local constants = require('lolloConMover.constants')
 local edgeUtils = require('lolloConMover.edgeUtils')
 local logger = require ('lolloConMover.logger')
 local stateHelpers = require('lolloConMover.stateHelpers')
--- local transfUtils = require('lolloConMover.transfUtils')
 local transfUtilsUG = require('transf')
 
 
