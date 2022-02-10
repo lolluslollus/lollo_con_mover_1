@@ -1,5 +1,6 @@
 local constants = require('lolloConMover.constants')
 local edgeUtilsDumb = require('lolloConMover.utils')
+local logger = require ('lolloConMover.logger')
 local transfUtilsUG = require('transf')
 
 
@@ -109,7 +110,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.ToggleButton.new(buttonLayout)
         button:setSelected(data.isIgnoreErrorsOn, false)
         button:onToggle(function(isOn) -- isOn is boolean
-            -- print('toggled; isOn = ', isOn)
+            -- logger.print('isIgnoreErrorsOn toggled; isOn = ', isOn)
             while buttonLayout:getNumItems() > 0 do
                 local item0 = buttonLayout:getItem(0)
                 buttonLayout:removeItem(item0)
@@ -126,7 +127,7 @@ data.showShiftWindow = function(conId, funcOfStringAndFloat)
         local button = api.gui.comp.ToggleButton.new(buttonLayout)
         button:setSelected(data.isFineAdjustmentsOn, false)
         button:onToggle(function(isOn) -- isOn is boolean
-            print('toggled; isOn = ', isOn)
+            -- logger.print('isFineAdjustments toggled; isOn = ', isOn)
             while buttonLayout:getNumItems() > 0 do
                 local item0 = buttonLayout:getItem(0)
                 buttonLayout:removeItem(item0)
@@ -369,15 +370,15 @@ local _modifyOnOffButtonLayout2 = function(layout, isOn)
     end
 end
 
-data.initNotausButton = function(isBoardsOn, funcOfBool)
+data.initNotausButton = function(isFunctionOn, funcOfBool)
     if api.gui.util.getById(_operationOnOffButtonId) then return end
 
     local buttonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
-    _modifyOnOffButtonLayout2(buttonLayout, isBoardsOn)
+    _modifyOnOffButtonLayout2(buttonLayout, isFunctionOn)
     local button = api.gui.comp.ToggleButton.new(buttonLayout)
-    button:setSelected(isBoardsOn, false)
+    button:setSelected(isFunctionOn, false)
     button:onToggle(function(isOn) -- isOn is boolean
-        -- print('toggled; isOn = ', isOn)
+        -- logger.print('isFunctionOn toggled; isOn = ', isOn)
         while buttonLayout:getNumItems() > 0 do
             local item0 = buttonLayout:getItem(0)
             buttonLayout:removeItem(item0)
