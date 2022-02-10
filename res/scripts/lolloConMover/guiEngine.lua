@@ -40,7 +40,7 @@ local function handleEvent(id, name, args)
                     end
                 )
             end,
-            logger.errorHandler
+            logger.xpErrorHandler
         )
     end
 end
@@ -48,7 +48,7 @@ end
 local function guiInit()
     local _state = stateHelpers.getState()
 
-    guiHelpers.initNotausButton(
+    guiHelpers.initNotausToggleButton(
         _state.is_on,
         function(isOn)
             _sendScriptEvent(constants.events.toggle_notaus, isOn)

@@ -133,7 +133,7 @@ actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
                         logger.print('shiftConstruction result = ') logger.debugPrint(result)
                     end
                 end,
-                logger.errorHandler
+                logger.xpWarningHandler
             )
         end
     )
@@ -169,7 +169,7 @@ local function handleEvent(src, id, name, args)
                 logger.print('state after =') logger.debugPrint(stateHelpers.getState())
             end
         end,
-        logger.errorHandler
+        logger.xpErrorHandler
     )
 end
 

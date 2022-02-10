@@ -20,6 +20,13 @@ local constants = {
 
     windowXShift = -200,
     windowYShift = 100,
+
+    guiIds = {
+        operationOnOffButton = 'lollo_con_mover_on_off_button',
+        shiftWindow = 'lollo_con_mover_shift_window',
+        warningWindowWithMessage = 'lollo_con_mover_warning_window_with_message',
+        warningWindowWithState = 'lollo_con_mover_warning_window_with_state',
+    }
 }
 
 return constants

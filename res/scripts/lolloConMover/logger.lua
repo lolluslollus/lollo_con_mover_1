@@ -1,4 +1,4 @@
-local _isExtendedLogActive = true
+local _isExtendedLogActive = false
 local _isWarningLogActive = true
 local _isErrorLogActive = true
 local _isTimersActive = true
@@ -43,7 +43,16 @@ return {
             return func() -- LOLLO TODO test this
         end
     end,
-    errorHandler = function(error)
+    xpHandler = function(error)
+        if not(_isExtendedLogActive) then return end
+        print('lolloConMover INFO:') debugPrint(error)
+    end,
+    xpWarningHandler = function(error)
+        if not(_isWarningLogActive) then return end
+        print('lolloConMover WARNING:') debugPrint(error)
+    end,
+    xpErrorHandler = function(error)
+        if not(_isErrorLogActive) then return end
         print('lolloConMover ERROR:') debugPrint(error)
     end,
 }
