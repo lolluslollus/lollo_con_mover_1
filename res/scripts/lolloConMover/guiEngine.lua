@@ -17,7 +17,7 @@ local function handleEvent(id, name, args)
     if name == 'select' then
         -- logger.print('LOLLO caught gui event, id = ', id, ' name = ', name, ' args = ') logger.debugPrint(args)
         local _state = stateHelpers.getState()
-        if not(_state.is_on) then return end
+        if not(_state) or not(_state.is_on) then return end
 
         if not(args) or not(utils.isValidAndExistingId(args)) then return end -- probably redundant
 
