@@ -47,6 +47,10 @@ end
 
 local function guiInit()
     local _state = stateHelpers.getState()
+    if not(_state) then
+        logger.err('cannot read state at guiInit')
+        return
+    end
 
     guiHelpers.initNotausToggleButton(
         _state.is_on,
