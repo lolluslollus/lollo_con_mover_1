@@ -66,12 +66,19 @@ local utils = {
         layout:addItem(api.gui.comp.TextView.new(text), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
     end,
     modifyOnOffButtonLayout2 = function(layout, isOn)
+        local img = nil
         if isOn then
-            layout:addItem(api.gui.comp.ImageView.new('ui/design/components/checkbox_valid.tga'), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
-            layout:addItem(api.gui.comp.TextView.new(_texts.operationOn), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+            -- img = api.gui.comp.ImageView.new('ui/design/components/checkbox_valid.tga')
+            img = api.gui.comp.ImageView.new('ui/lolloConMover/checkbox_valid.tga')
+            img:setTooltip(_texts.operationOn)
+            layout:addItem(img, api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+            -- layout:addItem(api.gui.comp.TextView.new(_texts.operationOn), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
         else
-            layout:addItem(api.gui.comp.ImageView.new('ui/design/components/checkbox_invalid.tga'), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
-            layout:addItem(api.gui.comp.TextView.new(_texts.operationOff), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+            -- img = api.gui.comp.ImageView.new('ui/design/components/checkbox_invalid.tga')
+            img = api.gui.comp.ImageView.new('ui/lolloConMover/checkbox_invalid.tga')
+            img:setTooltip(_texts.operationOff)
+            layout:addItem(img, api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
+            -- layout:addItem(api.gui.comp.TextView.new(_texts.operationOff), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
         end
     end,
     moveCamera = function(position)
