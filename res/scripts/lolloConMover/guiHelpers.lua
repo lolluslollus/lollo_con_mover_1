@@ -18,8 +18,8 @@ local _texts = {
     rotZMinus = _('RotZMinus'),
     rotZPlus = _('RotZPlus'),
     shiftWindowTitle = _('ShiftWindowTitle'),
-    xMinus = _('East'),
-    xPlus = _('West'),
+    xMinus = _('West'),
+    xPlus = _('East'),
     yMinus = _('South'),
     yPlus = _('North'),
     zMinus = _('Down'),
@@ -83,12 +83,13 @@ local utils = {
     end,
     moveCamera = function(position)
         local cameraData = game.gui.getCamera()
+        -- posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
         game.gui.setCamera({position[1], position[2], cameraData[3], cameraData[4], cameraData[5]})
     end,
 }
 
 return {
-    showShiftWindow = function(conId, funcOfStringAndFloat)
+    showShiftWindow = function(conId, callback)
         local layout = api.gui.layout.AbsoluteLayout.new()
         local window = api.gui.util.getById(constants.guiIds.shiftWindow)
         if window == nil then
@@ -100,6 +101,11 @@ return {
             window:setVisible(true, false)
         end
         window:setResizable(true)
+        -- window:setHighlighted(true)
+        -- local position = api.gui.util.getMouseScreenPos()
+        -- window:setPosition(position.x + constants.windowXShift, position.y + constants.windowYShift)
+        window:setGravity(4, 0) -- LOLLO TODO check this
+        window:addHideOnCloseHandler()
 
         local _y0 = 15
 
@@ -157,10 +163,11 @@ return {
         local function addXMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_left.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xMinus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.shiftX, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftX, -utils.getLinearShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 120, 100, 40))
@@ -168,10 +175,11 @@ return {
         local function addXPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_right.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xPlus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.shiftX, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftX, utils.getLinearShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 120, 100, 40))
@@ -179,10 +187,11 @@ return {
         local function addYMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_down.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yMinus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.shiftY, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftY, -utils.getLinearShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 160, 100, 40))
@@ -190,10 +199,11 @@ return {
         local function addYPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_up.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yPlus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.shiftY, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftY, utils.getLinearShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 80, 100, 40))
@@ -204,7 +214,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zMinus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.shiftZ, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftZ, -utils.getLinearShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(280, _y0 + 160, 100, 40))
@@ -215,7 +225,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zPlus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.shiftZ, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftZ, utils.getLinearShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(280, _y0 + 80, 100, 40))
@@ -226,7 +236,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXMinus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 200, 100, 40))
@@ -237,7 +247,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXPlus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 200, 100, 40))
@@ -248,7 +258,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYMinus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 240, 100, 40))
@@ -259,7 +269,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYPlus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 240, 100, 40))
@@ -270,7 +280,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZMinus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 280, 100, 40))
@@ -281,7 +291,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZPlus))
             button:onClick(
                 function()
-                    funcOfStringAndFloat(constants.transNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 280, 100, 40))
@@ -301,11 +311,6 @@ return {
         addRotYPlus1Button()
         addRotZMinus1Button()
         addRotZPlus1Button()
-
-        -- window:setHighlighted(true)
-        local position = api.gui.util.getMouseScreenPos()
-        window:setPosition(position.x + constants.windowXShift, position.y + constants.windowYShift)
-        window:addHideOnCloseHandler()
     end,
 
     showWarningWindowWithMessage = function(text)

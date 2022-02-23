@@ -29,9 +29,22 @@ local function handleEvent(id, name, args)
                 guiHelpers.showShiftWindow(
                     args, -- conId
                     function(fieldName, fieldValue, isIgnoreErrors)
+                        local cameraRotZTransf = constants.idTransf
+                        local cameraData = game.gui.getCamera()
+                        if not(cameraData) then
+                            logger.warn('cannot get camera')
+                        else
+                            -- cameraData looks like posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
+                            local cameraRotZ = cameraData[4] or 0
+                            logger.print('cameraData[4] =', cameraData[4] or 'NIL')
+                            logger.print('cameraData[4] normalised =', math.fmod(cameraData[4], math.pi * 2))
+                            -- same as cameraData[4] % (math.pi * 2)
+                            cameraRotZTransf = transfUtilsUG.rotZ(cameraRotZ + math.pi / 2)
+                        end
                         _sendScriptEvent(
                             constants.events.shift_construction,
                             {
+                                cameraRotZTransf = cameraRotZTransf,
                                 conId = args,
                                 [fieldName] = fieldValue,
                                 isIgnoreErrors = isIgnoreErrors

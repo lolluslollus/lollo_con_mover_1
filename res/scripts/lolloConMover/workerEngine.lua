@@ -35,7 +35,7 @@ local actions = {
         )
     end,
     renameConstruction = function(conId, newName)
-        logger.print('renameConstruction starting, conId =', (conId or 'NIL'), 'newName =', newName or 'NIL')
+        -- logger.print('renameConstruction starting, conId =', (conId or 'NIL'), 'newName =', newName or 'NIL')
         if not(utils.isValidAndExistingId(conId)) then return end
 
         xpcall(
@@ -43,7 +43,10 @@ local actions = {
                 api.cmd.sendCommand(
                     api.cmd.make.setName(conId, newName or ''),
                     function(result, success)
-                        logger.print('renameConstruction success = ', success)
+                        if not(success) then
+                            logger.warn('renameConstruction failed')
+                        end
+                        -- logger.print('renameConstruction success = ', success)
                         -- logger.print('renameConstruction result = ') logger.debugPrint(result)
                     end
                 )
@@ -52,14 +55,33 @@ local actions = {
         )
     end,
 }
-actions.nudgeConstruction = function(conId, nudgeTransf, isIgnoreErrors, forcedConTransf)
+local _getNewRotTransf = function(oldConTransf, deltaTransf)
+    -- this will rotate and translate the construction around its own axes,
+    -- not around the world axes.
+    local newConTransf = transfUtilsUG.mul(oldConTransf, deltaTransf)
+    return newConTransf
+end
+local _getNewShiftTransf = function(oldConTransf, deltaTransf)
+    -- this will shift the construction along the world axes
+    local newConTransf = {}
+    for i = 1, 12, 1 do
+       newConTransf[i] = oldConTransf[i]
+    end
+    for i = 13, 15, 1 do
+        newConTransf[i] = oldConTransf[i] + deltaTransf[i]
+    end
+    newConTransf[16] = oldConTransf[16]
+
+    return newConTransf
+end
+actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnoreErrors, forcedConTransf)
     if not(utils.isValidAndExistingId(conId)) then
-        logger.print('nudgeConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
+        logger.print('moveConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
         return
     end
     local oldCon = api.engine.getComponent(conId, api.type.ComponentType.CONSTRUCTION)
     if not(oldCon) then
-        logger.print('nudgeConstruction cannot shift construction with id =', conId or 'NIL', 'because it cannot be read')
+        logger.print('moveConstruction cannot shift construction with id =', conId or 'NIL', 'because it cannot be read')
         return
     end
 
@@ -75,9 +97,16 @@ actions.nudgeConstruction = function(conId, nudgeTransf, isIgnoreErrors, forcedC
     local paramsBak = arrayUtils.cloneDeepOmittingFields(newParams, {'seed'})
 
     local oldConTransf = transfUtilsUG.new(oldCon.transf:cols(0), oldCon.transf:cols(1), oldCon.transf:cols(2), oldCon.transf:cols(3))
-    local newConTransf = forcedConTransf
-        and forcedConTransf
-        or transfUtilsUG.mul(oldConTransf, nudgeTransf)
+    logger.print('oldConTransf =') logger.debugPrint(oldConTransf)
+    local newConTransf = nil
+    if forcedConTransf then
+        newConTransf = forcedConTransf
+    elseif isRotateTransf then
+        newConTransf = _getNewRotTransf(oldConTransf, deltaTransf)
+    else
+        newConTransf = _getNewShiftTransf(oldConTransf, deltaTransf)
+    end
+    logger.print('newConTransf =') logger.debugPrint(newConTransf)
     newCon.transf = api.type.Mat4f.new(
         api.type.Vec4f.new(newConTransf[1], newConTransf[2], newConTransf[3], newConTransf[4]),
         api.type.Vec4f.new(newConTransf[5], newConTransf[6], newConTransf[7], newConTransf[8]),
@@ -110,21 +139,35 @@ actions.nudgeConstruction = function(conId, nudgeTransf, isIgnoreErrors, forcedC
 
     local context = api.type.Context:new()
     context.checkTerrainAlignment = true -- default is false, true gives smoother Z
-    context.cleanupStreetGraph = true -- default is false
+    -- context.cleanupStreetGraph = true -- default is false, true seems to make trouble
     context.gatherBuildings = true  -- default is false
     -- context.gatherFields = true -- default is true
     -- context.player = api.engine.util.getPlayer() -- default is -1
     -- local cmd = api.cmd.make.buildProposal(proposal, context, true) -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway
+    local expectedResult = api.engine.util.proposal.makeProposalData(proposal, context)
+    if expectedResult.errorState.critical then
+        logger.print('moveConstruction would create a critical error, leaving')
+        return
+    end
     api.cmd.sendCommand(
         api.cmd.make.buildProposal(proposal, context, isIgnoreErrors), -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway,
         function(result, success)
             if not(success) then
-                logger.print('nudgeConstruction failed')
-                -- logger.print('nudgeConstruction result = ') logger.debugPrint(result)
+                logger.print('moveConstruction failed')
+                -- logger.print('moveConstruction result = ') logger.debugPrint(result)
                 return
             end
 
-            logger.print('nudgeConstruction succeeded')
+            logger.print('moveConstruction succeeded')
+            local errorState = result.resultProposalData.errorState
+            -- {
+            --     critical = false,
+            --     messages = {
+            --     },
+            --     warnings = {
+            --     },
+            -- }
+            logger.print('result.errorState = ') logger.debugPrint(errorState)
             if not(result) or not(result.resultEntities) or #result.resultEntities ~= 1 then
                 logger.warn('result.resultEntities[1] not available')
                 return
@@ -141,19 +184,21 @@ actions.nudgeConstruction = function(conId, nudgeTransf, isIgnoreErrors, forcedC
                 function()
                     -- UG TODO there is no such thing in the new api,
                     -- bor an upgrade event, which could be useful
-                    game.interface.upgradeConstruction(
+                    local upgradedConId = game.interface.upgradeConstruction(
                         result.resultEntities[1],
                         oldCon.fileName,
                         paramsBak
                     )
-                    logger.print('upgradeConstruction failed, revert succeeded')
+                    logger.print('upgradeConstruction succeeded') logger.debugPrint(upgradedConId)
                 end,
                 function(error)
                     if forcedConTransf then
                         logger.print('upgradeConstruction failed, revert failed, giving up')
+                    elseif isIgnoreErrors then
+                        logger.print('upgradeConstruction failed, ignoring')
                     else
-                        logger.print('upgradeConstruction failed, trying to revert')
-                        actions.nudgeConstruction(conId, constants.idTransf, true, oldConTransf)
+                        logger.print('upgradeConstruction failed, a path has probably been broken')
+                        actions.moveConstruction(conId, constants.idTransf, false, true, oldConTransf)
                     end
                 end
             )
@@ -169,21 +214,36 @@ local function handleEvent(src, id, name, args)
             logger.print('handleEvent firing, src =', src, ', id =', id, ', name =', name, ', args =') logger.debugPrint(args)
 
             if name == constants.events.shift_construction then
-                local nudgeTransf = {
-                    1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    (args[constants.transNames.shiftX] or 0), (args[constants.transNames.shiftY] or 0), (args[constants.transNames.shiftZ] or 0), 1
-                }
+                local isRotateTransf = true
+                local deltaTransf = constants.idTransf
                 if args[constants.transNames.rotX] then
-                    nudgeTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
+                    deltaTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
                 elseif args[constants.transNames.rotY] then
-                    nudgeTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
+                    deltaTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
                 elseif args[constants.transNames.rotZ] then
-                    nudgeTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
+                    deltaTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
+                else
+                    isRotateTransf = false
+                    deltaTransf = {
+                        1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        (args[constants.transNames.shiftX] or 0), (args[constants.transNames.shiftY] or 0), (args[constants.transNames.shiftZ] or 0), 1
+                    }
+                    if args.cameraRotZTransf then
+                        logger.print('deltaTransf without camera =') logger.debugPrint(deltaTransf)
+                        deltaTransf = transfUtilsUG.mul(args.cameraRotZTransf, deltaTransf)
+                        deltaTransf = {
+                            1, 0, 0, 0,
+                            0, 1, 0, 0,
+                            0, 0, 1, 0,
+                            deltaTransf[13], deltaTransf[14], deltaTransf[15], 1
+                        }
+                    end
                 end
-                logger.print('nudgeTransf =') logger.debugPrint(nudgeTransf)
-                actions.nudgeConstruction(args.conId, nudgeTransf, args.isIgnoreErrors)
+
+                logger.print('isRotateTransf = ', isRotateTransf, 'deltaTransf before moving =') logger.debugPrint(deltaTransf)
+                actions.moveConstruction(args.conId, deltaTransf, isRotateTransf, args.isIgnoreErrors)
             elseif name == constants.events.toggle_notaus then
                 logger.print('state before =') logger.debugPrint(stateHelpers.getState())
                 local state = stateHelpers.getState()
