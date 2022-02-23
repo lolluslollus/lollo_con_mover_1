@@ -219,7 +219,7 @@ return {
 
                 if name == constants.events.shift_construction then
                     local isRotateTransf = true
-                    local deltaTransf = constants.idTransf
+                    local deltaTransf = nil
                     if args[constants.transNames.rotX] then
                         deltaTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
                     elseif args[constants.transNames.rotY] then
