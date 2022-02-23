@@ -13,21 +13,24 @@ local function _sendScriptEvent(name, args)
     )
 end
 
-local function handleEvent(id, name, args)
-    if name == 'select' then
+return {
+    handleEvent = function(id, name, args)
+        if name ~= 'select' then return end
+
         -- logger.print('LOLLO caught gui event, id = ', id, ' name = ', name, ' args = ') logger.debugPrint(args)
         local _state = stateHelpers.getState()
         if not(_state) or not(_state.is_on) then return end
 
-        if not(args) or not(utils.isValidAndExistingId(args)) then return end -- probably redundant
+        local _conId = args
+        if not(_conId) or not(utils.isValidAndExistingId(_conId)) then return end
 
-        local con = api.engine.getComponent(args, api.type.ComponentType.CONSTRUCTION)
+        local con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.fileName) then return end
 
         xpcall(
             function()
                 guiHelpers.showShiftWindow(
-                    args, -- conId
+                    _conId,
                     function(fieldName, fieldValue, isIgnoreErrors)
                         local cameraRotZTransf = constants.idTransf
                         local cameraData = game.gui.getCamera()
@@ -45,7 +48,7 @@ local function handleEvent(id, name, args)
                             constants.events.shift_construction,
                             {
                                 cameraRotZTransf = cameraRotZTransf,
-                                conId = args,
+                                conId = _conId,
                                 [fieldName] = fieldValue,
                                 isIgnoreErrors = isIgnoreErrors
                             }
@@ -55,25 +58,19 @@ local function handleEvent(id, name, args)
             end,
             logger.xpErrorHandler
         )
-    end
-end
-
-local function guiInit()
-    local _state = stateHelpers.getState()
-    if not(_state) then
-        logger.err('cannot read state at guiInit')
-        return
-    end
-
-    guiHelpers.initNotausToggleButton(
-        _state.is_on,
-        function(isOn)
-            _sendScriptEvent(constants.events.toggle_notaus, isOn)
+    end,
+    guiInit = function()
+        local _state = stateHelpers.getState()
+        if not(_state) then
+            logger.err('cannot read state at guiInit')
+            return
         end
-    )
-end
 
-return {
-    guiInit = guiInit,
-    handleEvent = handleEvent,
+        guiHelpers.initNotausToggleButton(
+            _state.is_on,
+            function(isOn)
+                _sendScriptEvent(constants.events.toggle_notaus, isOn)
+            end
+        )
+    end,
 }

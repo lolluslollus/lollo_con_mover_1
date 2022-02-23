@@ -6,6 +6,26 @@ local transfUtilsUG = require('transf')
 local utils = require('lolloConMover.utils')
 
 
+local _getNewRotTransf = function(oldConTransf, deltaTransf)
+    -- this will rotate and translate the construction around its own axes,
+    -- not around the world axes.
+    local newConTransf = transfUtilsUG.mul(oldConTransf, deltaTransf)
+    return newConTransf
+end
+local _getNewShiftTransf = function(oldConTransf, deltaTransf)
+    -- this will shift the construction along the world axes
+    local newConTransf = {}
+    for i = 1, 12, 1 do
+       newConTransf[i] = oldConTransf[i]
+    end
+    for i = 13, 15, 1 do
+        newConTransf[i] = oldConTransf[i] + deltaTransf[i]
+    end
+    newConTransf[16] = oldConTransf[16]
+
+    return newConTransf
+end
+
 local actions = {
     bulldozeConstruction = function(conId)
         if not(utils.isValidAndExistingId(conId)) then
@@ -55,25 +75,6 @@ local actions = {
         )
     end,
 }
-local _getNewRotTransf = function(oldConTransf, deltaTransf)
-    -- this will rotate and translate the construction around its own axes,
-    -- not around the world axes.
-    local newConTransf = transfUtilsUG.mul(oldConTransf, deltaTransf)
-    return newConTransf
-end
-local _getNewShiftTransf = function(oldConTransf, deltaTransf)
-    -- this will shift the construction along the world axes
-    local newConTransf = {}
-    for i = 1, 12, 1 do
-       newConTransf[i] = oldConTransf[i]
-    end
-    for i = 13, 15, 1 do
-        newConTransf[i] = oldConTransf[i] + deltaTransf[i]
-    end
-    newConTransf[16] = oldConTransf[16]
-
-    return newConTransf
-end
 actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnoreErrors, forcedConTransf)
     if not(utils.isValidAndExistingId(conId)) then
         logger.print('moveConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
@@ -206,55 +207,53 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     )
 end
 
-local function handleEvent(src, id, name, args)
-    if id ~= constants.eventId then return end
+return {
+    handleEvent = function(src, id, name, args)
+        if id ~= constants.eventId then return end
 
-    xpcall(
-        function()
-            logger.print('handleEvent firing, src =', src, ', id =', id, ', name =', name, ', args =') logger.debugPrint(args)
+        xpcall(
+            function()
+                logger.print('handleEvent firing, src =', src, ', id =', id, ', name =', name, ', args =') logger.debugPrint(args)
 
-            if name == constants.events.shift_construction then
-                local isRotateTransf = true
-                local deltaTransf = constants.idTransf
-                if args[constants.transNames.rotX] then
-                    deltaTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
-                elseif args[constants.transNames.rotY] then
-                    deltaTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
-                elseif args[constants.transNames.rotZ] then
-                    deltaTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
-                else
-                    isRotateTransf = false
-                    deltaTransf = {
-                        1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        (args[constants.transNames.shiftX] or 0), (args[constants.transNames.shiftY] or 0), (args[constants.transNames.shiftZ] or 0), 1
-                    }
-                    if args.cameraRotZTransf then
-                        logger.print('deltaTransf without camera =') logger.debugPrint(deltaTransf)
-                        deltaTransf = transfUtilsUG.mul(args.cameraRotZTransf, deltaTransf)
+                if name == constants.events.shift_construction then
+                    local isRotateTransf = true
+                    local deltaTransf = constants.idTransf
+                    if args[constants.transNames.rotX] then
+                        deltaTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
+                    elseif args[constants.transNames.rotY] then
+                        deltaTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
+                    elseif args[constants.transNames.rotZ] then
+                        deltaTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
+                    else
+                        isRotateTransf = false
                         deltaTransf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,
                             0, 0, 1, 0,
-                            deltaTransf[13], deltaTransf[14], deltaTransf[15], 1
+                            (args[constants.transNames.shiftX] or 0), (args[constants.transNames.shiftY] or 0), (args[constants.transNames.shiftZ] or 0), 1
                         }
+                        if args.cameraRotZTransf then
+                            logger.print('deltaTransf without camera =') logger.debugPrint(deltaTransf)
+                            deltaTransf = transfUtilsUG.mul(args.cameraRotZTransf, deltaTransf)
+                            deltaTransf = {
+                                1, 0, 0, 0,
+                                0, 1, 0, 0,
+                                0, 0, 1, 0,
+                                deltaTransf[13], deltaTransf[14], deltaTransf[15], 1
+                            }
+                        end
                     end
+
+                    logger.print('isRotateTransf = ', isRotateTransf, ', deltaTransf before moving =') logger.debugPrint(deltaTransf)
+                    actions.moveConstruction(args.conId, deltaTransf, isRotateTransf, args.isIgnoreErrors)
+                elseif name == constants.events.toggle_notaus then
+                    logger.print('state before =') logger.debugPrint(stateHelpers.getState())
+                    local state = stateHelpers.getState()
+                    state.is_on = not(not(args))
+                    logger.print('state after =') logger.debugPrint(stateHelpers.getState())
                 end
-
-                logger.print('isRotateTransf = ', isRotateTransf, ', deltaTransf before moving =') logger.debugPrint(deltaTransf)
-                actions.moveConstruction(args.conId, deltaTransf, isRotateTransf, args.isIgnoreErrors)
-            elseif name == constants.events.toggle_notaus then
-                logger.print('state before =') logger.debugPrint(stateHelpers.getState())
-                local state = stateHelpers.getState()
-                state.is_on = not(not(args))
-                logger.print('state after =') logger.debugPrint(stateHelpers.getState())
-            end
-        end,
-        logger.xpErrorHandler
-    )
-end
-
-return {
-    handleEvent = handleEvent
+            end,
+            logger.xpErrorHandler
+        )
+    end,
 }

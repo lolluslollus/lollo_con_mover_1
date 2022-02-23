@@ -8,7 +8,12 @@ local _initState = function()
     end
 end
 
-local funcs = {
+_initState() -- fires when loading
+
+return {
+    getState = function()
+        return persistent_state
+    end,
     initState = _initState,
     loadState = function(state)
         if state then
@@ -17,15 +22,8 @@ local funcs = {
 
         _initState()
     end,
-    getState = function()
-        return persistent_state
-    end,
     saveState = function()
         _initState()
         return persistent_state
     end,
 }
-
-_initState() -- fires when loading
-
-return funcs
