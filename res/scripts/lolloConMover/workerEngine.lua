@@ -71,7 +71,7 @@ local actions = {
                     end
                 )
             end,
-            logger.xpHandler
+            logger.xpErrorHandler
         )
     end,
 }
