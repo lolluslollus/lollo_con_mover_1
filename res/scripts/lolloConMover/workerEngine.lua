@@ -97,7 +97,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     local paramsBak = arrayUtils.cloneDeepOmittingFields(newParams, {'seed'})
 
     local oldConTransf = transfUtilsUG.new(oldCon.transf:cols(0), oldCon.transf:cols(1), oldCon.transf:cols(2), oldCon.transf:cols(3))
-    logger.print('oldConTransf =') logger.debugPrint(oldConTransf)
+    -- logger.print('oldConTransf =') logger.debugPrint(oldConTransf)
     local newConTransf = nil
     if forcedConTransf then
         newConTransf = forcedConTransf
@@ -106,7 +106,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     else
         newConTransf = _getNewShiftTransf(oldConTransf, deltaTransf)
     end
-    logger.print('newConTransf =') logger.debugPrint(newConTransf)
+    -- logger.print('newConTransf =') logger.debugPrint(newConTransf)
     newCon.transf = api.type.Mat4f.new(
         api.type.Vec4f.new(newConTransf[1], newConTransf[2], newConTransf[3], newConTransf[4]),
         api.type.Vec4f.new(newConTransf[5], newConTransf[6], newConTransf[7], newConTransf[8]),
@@ -159,7 +159,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
             end
 
             logger.print('moveConstruction succeeded')
-            local errorState = result.resultProposalData.errorState
+            -- local errorState = result.resultProposalData.errorState
             -- {
             --     critical = false,
             --     messages = {
@@ -167,7 +167,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
             --     warnings = {
             --     },
             -- }
-            logger.print('result.errorState = ') logger.debugPrint(errorState)
+            logger.print('result.errorState = ') logger.debugPrint(result.resultProposalData.errorState)
             if not(result) or not(result.resultEntities) or #result.resultEntities ~= 1 then
                 logger.warn('result.resultEntities[1] not available')
                 return
@@ -177,7 +177,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
             actions.renameConstruction(result.resultEntities[1], oldConName)
             if conId ~= result.resultEntities[1] then
                 logger.warn('oddly, conId =', conId)
-                -- return
+                return
             end
 
             xpcall(
@@ -242,7 +242,7 @@ local function handleEvent(src, id, name, args)
                     end
                 end
 
-                logger.print('isRotateTransf = ', isRotateTransf, 'deltaTransf before moving =') logger.debugPrint(deltaTransf)
+                logger.print('isRotateTransf = ', isRotateTransf, ', deltaTransf before moving =') logger.debugPrint(deltaTransf)
                 actions.moveConstruction(args.conId, deltaTransf, isRotateTransf, args.isIgnoreErrors)
             elseif name == constants.events.toggle_notaus then
                 logger.print('state before =') logger.debugPrint(stateHelpers.getState())
