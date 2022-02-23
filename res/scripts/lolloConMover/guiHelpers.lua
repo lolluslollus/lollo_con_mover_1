@@ -232,7 +232,7 @@ return {
         end
         local function addRotXMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
-            buttonLayout:addItem(api.gui.comp.ImageView.new('lolloConMover/rotate_clockwise.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/rotate_clockwise.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXMinus))
             button:onClick(
                 function()
@@ -243,7 +243,7 @@ return {
         end
         local function addRotXPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
-            buttonLayout:addItem(api.gui.comp.ImageView.new('lolloConMover/rotate_anticlockwise.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/rotate_anticlockwise.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXPlus))
             button:onClick(
                 function()
@@ -254,7 +254,7 @@ return {
         end
         local function addRotYMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
-            buttonLayout:addItem(api.gui.comp.ImageView.new('lolloConMover/rotate_clockwise.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/rotate_clockwise.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYMinus))
             button:onClick(
                 function()
@@ -265,7 +265,7 @@ return {
         end
         local function addRotYPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
-            buttonLayout:addItem(api.gui.comp.ImageView.new('lolloConMover/rotate_anticlockwise.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/rotate_anticlockwise.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYPlus))
             button:onClick(
                 function()
@@ -276,7 +276,7 @@ return {
         end
         local function addRotZMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
-            buttonLayout:addItem(api.gui.comp.ImageView.new('lolloConMover/rotate_clockwise.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/rotate_clockwise.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZMinus))
             button:onClick(
                 function()
@@ -287,7 +287,7 @@ return {
         end
         local function addRotZPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
-            buttonLayout:addItem(api.gui.comp.ImageView.new('lolloConMover/rotate_anticlockwise.tga'))
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/rotate_anticlockwise.tga'))
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZPlus))
             button:onClick(
                 function()
