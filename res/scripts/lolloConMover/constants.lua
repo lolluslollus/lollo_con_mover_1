@@ -4,6 +4,8 @@ local constants = {
     smallLinearShift = 0.1,
     smallRotShift = math.pi / 160,
 
+    idTransf = {1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1},
+
     eventId = '__lollo_construction_mover__',
     events = {
         shift_construction = 'shift_construction',

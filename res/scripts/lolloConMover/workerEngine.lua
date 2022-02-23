@@ -38,24 +38,28 @@ local actions = {
         logger.print('renameConstruction starting, conId =', (conId or 'NIL'), 'newName =', newName or 'NIL')
         if not(utils.isValidAndExistingId(conId)) then return end
 
-        local cmd = api.cmd.make.setName(conId, newName or '')
-        api.cmd.sendCommand(
-            cmd,
-            function(result, success)
-                logger.print('renameConstruction success = ', success)
-                -- logger.print('renameConstruction result = ') logger.debugPrint(result)
-            end
+        xpcall(
+            function ()
+                api.cmd.sendCommand(
+                    api.cmd.make.setName(conId, newName or ''),
+                    function(result, success)
+                        logger.print('renameConstruction success = ', success)
+                        -- logger.print('renameConstruction result = ') logger.debugPrint(result)
+                    end
+                )
+            end,
+            logger.xpHandler
         )
     end,
 }
-actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
+actions.nudgeConstruction = function(conId, nudgeTransf, isIgnoreErrors, forcedConTransf)
     if not(utils.isValidAndExistingId(conId)) then
-        logger.print('shiftConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
+        logger.print('nudgeConstruction cannot shift construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
         return
     end
     local oldCon = api.engine.getComponent(conId, api.type.ComponentType.CONSTRUCTION)
     if not(oldCon) then
-        logger.print('shiftConstruction cannot shift construction with id =', conId or 'NIL', 'because it cannot be read')
+        logger.print('nudgeConstruction cannot shift construction with id =', conId or 'NIL', 'because it cannot be read')
         return
     end
 
@@ -71,7 +75,9 @@ actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
     local paramsBak = arrayUtils.cloneDeepOmittingFields(newParams, {'seed'})
 
     local oldConTransf = transfUtilsUG.new(oldCon.transf:cols(0), oldCon.transf:cols(1), oldCon.transf:cols(2), oldCon.transf:cols(3))
-    local newConTransf = transfUtilsUG.mul(oldConTransf, newTransf)
+    local newConTransf = forcedConTransf
+        and forcedConTransf
+        or transfUtilsUG.mul(oldConTransf, nudgeTransf)
     newCon.transf = api.type.Mat4f.new(
         api.type.Vec4f.new(newConTransf[1], newConTransf[2], newConTransf[3], newConTransf[4]),
         api.type.Vec4f.new(newConTransf[5], newConTransf[6], newConTransf[7], newConTransf[8]),
@@ -112,28 +118,44 @@ actions.shiftConstruction = function(conId, newTransf, isIgnoreErrors)
     api.cmd.sendCommand(
         api.cmd.make.buildProposal(proposal, context, isIgnoreErrors), -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway,
         function(result, success)
+            if not(success) then
+                logger.print('nudgeConstruction failed')
+                -- logger.print('nudgeConstruction result = ') logger.debugPrint(result)
+                return
+            end
+
+            logger.print('nudgeConstruction succeeded')
+            if not(result) or not(result.resultEntities) or #result.resultEntities ~= 1 then
+                logger.warn('result.resultEntities[1] not available')
+                return
+            end
+
+            logger.print('result.resultEntities[1] =', result.resultEntities[1])
+            actions.renameConstruction(result.resultEntities[1], oldConName)
+            if conId ~= result.resultEntities[1] then
+                logger.warn('oddly, conId =', conId)
+                -- return
+            end
+
             xpcall(
                 function()
-                    if success then
-                        logger.print('shiftConstruction succeeded')
-                        if result and result.resultEntities and #result.resultEntities == 1 then
-                            logger.print('result.resultEntities[1] =', result.resultEntities[1])
-                            actions.renameConstruction(result.resultEntities[1], oldConName)
-                            if conId == result.resultEntities[1] then
-                                -- UG TODO there is no such thing in the new api
-                                game.interface.upgradeConstruction(
-                                    conId,
-                                    oldCon.fileName,
-                                    paramsBak
-                                )
-                            end
-                        end
-                    else
-                        logger.print('shiftConstruction failed')
-                        logger.print('shiftConstruction result = ') logger.debugPrint(result)
-                    end
+                    -- UG TODO there is no such thing in the new api,
+                    -- bor an upgrade event, which could be useful
+                    game.interface.upgradeConstruction(
+                        result.resultEntities[1],
+                        oldCon.fileName,
+                        paramsBak
+                    )
+                    logger.print('upgradeConstruction failed, revert succeeded')
                 end,
-                logger.xpWarningHandler
+                function(error)
+                    if forcedConTransf then
+                        logger.print('upgradeConstruction failed, revert failed, giving up')
+                    else
+                        logger.print('upgradeConstruction failed, trying to revert')
+                        actions.nudgeConstruction(conId, constants.idTransf, true, oldConTransf)
+                    end
+                end
             )
         end
     )
@@ -147,21 +169,21 @@ local function handleEvent(src, id, name, args)
             logger.print('handleEvent firing, src =', src, ', id =', id, ', name =', name, ', args =') logger.debugPrint(args)
 
             if name == constants.events.shift_construction then
-                local newTransf = {
+                local nudgeTransf = {
                     1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, 1, 0,
                     (args[constants.transNames.shiftX] or 0), (args[constants.transNames.shiftY] or 0), (args[constants.transNames.shiftZ] or 0), 1
                 }
                 if args[constants.transNames.rotX] then
-                    newTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
+                    nudgeTransf = transfUtilsUG.rotX(args[constants.transNames.rotX])
                 elseif args[constants.transNames.rotY] then
-                    newTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
+                    nudgeTransf = transfUtilsUG.rotY(args[constants.transNames.rotY])
                 elseif args[constants.transNames.rotZ] then
-                    newTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
+                    nudgeTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
                 end
-                logger.print('newTransf =') logger.debugPrint(newTransf)
-                actions.shiftConstruction(args.conId, newTransf, args.isIgnoreErrors)
+                logger.print('nudgeTransf =') logger.debugPrint(nudgeTransf)
+                actions.nudgeConstruction(args.conId, nudgeTransf, args.isIgnoreErrors)
             elseif name == constants.events.toggle_notaus then
                 logger.print('state before =') logger.debugPrint(stateHelpers.getState())
                 local state = stateHelpers.getState()
