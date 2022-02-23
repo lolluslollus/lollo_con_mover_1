@@ -169,7 +169,9 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
             --     },
             -- }
             logger.print('result.errorState = ') logger.debugPrint(result.resultProposalData.errorState)
-            if not(result) or not(result.resultEntities) or #result.resultEntities ~= 1 then
+            if not(result) or not(result.resultEntities)
+            or (type(result.resultEntities) ~= 'userdata' and type(result.resultEntities) ~= 'table')
+            or not(result.resultEntities[1]) then
                 logger.warn('result.resultEntities[1] not available')
                 return
             end
@@ -184,7 +186,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
             xpcall(
                 function()
                     -- UG TODO there is no such thing in the new api,
-                    -- bor an upgrade event, which could be useful
+                    -- nor an upgrade event, which could be useful
                     local upgradedConId = game.interface.upgradeConstruction(
                         result.resultEntities[1],
                         oldCon.fileName,
