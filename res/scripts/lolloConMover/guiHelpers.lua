@@ -9,6 +9,7 @@ local _texts = {
     fineAdjustments = _('FineAdjustments'),
     goThere = _('GoThere'),
     ignoreErrors = _('IgnoreErrors'),
+    note = _('Note'),
     operationOff = _('OperationOff'),
     operationOn = _('OperationOn'),
     rotXMinus = _('RotXMinus'),
@@ -109,8 +110,11 @@ return {
 
         local _y0 = 15
 
-        local descriptiveText = _texts.conId .. tostring(conId)
-        layout:addItem(api.gui.comp.TextView.new(descriptiveText), api.gui.util.Rect.new(240, _y0, 100, 40))
+        local infoIcon = api.gui.comp.ImageView.new('ui/button/medium/info.tga')
+        infoIcon:setTooltip(_texts.note)
+        layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0, 40, 40))
+
+        layout:addItem(api.gui.comp.TextView.new(_texts.conId .. tostring(conId)), api.gui.util.Rect.new(240, _y0, 100, 40))
 
         local function addGotoButton()
             local button, buttonLayout = utils.getButtonAndItsLayout()
