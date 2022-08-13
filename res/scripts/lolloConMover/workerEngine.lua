@@ -145,6 +145,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     -- context.gatherFields = true -- default is true
     -- context.player = api.engine.util.getPlayer() -- default is -1
     -- local cmd = api.cmd.make.buildProposal(proposal, context, true) -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway
+    -- UG TODO this does not catch critical errors, they come anyway and crash the game
     local expectedResult = api.engine.util.proposal.makeProposalData(proposal, context)
     if expectedResult.errorState.critical then
         logger.print('moveConstruction would create a critical error, leaving')
