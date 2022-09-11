@@ -48,8 +48,8 @@ local actions = {
         -- context.player = api.engine.util.getPlayer() -- default is -1
         api.cmd.sendCommand(
             api.cmd.make.buildProposal(proposal, context, true), -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway
-            function(result, success)
-                logger.print('bulldozeConstruction success = ', success)
+            function(result, isSuccess)
+                logger.print('bulldozeConstruction success = ', isSuccess)
                 -- logger.print('bulldozeConstruction result = ') logger.debugPrint(result)
             end
         )
@@ -62,11 +62,11 @@ local actions = {
             function ()
                 api.cmd.sendCommand(
                     api.cmd.make.setName(conId, newName or ''),
-                    function(result, success)
-                        if not(success) then
+                    function(result, isSuccess)
+                        if not(isSuccess) then
                             logger.warn('renameConstruction failed')
                         end
-                        -- logger.print('renameConstruction success = ', success)
+                        -- logger.print('renameConstruction success = ', isSuccess)
                         -- logger.print('renameConstruction result = ') logger.debugPrint(result)
                     end
                 )
@@ -100,7 +100,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     local oldConTransf = transfUtilsUG.new(oldCon.transf:cols(0), oldCon.transf:cols(1), oldCon.transf:cols(2), oldCon.transf:cols(3))
     -- logger.print('oldConTransf =') logger.debugPrint(oldConTransf)
     local newConTransf = nil
-    if forcedConTransf then
+    if forcedConTransf ~= nil then
         newConTransf = forcedConTransf
     elseif isRotateTransf then
         newConTransf = _getNewRotTransf(oldConTransf, deltaTransf)
@@ -153,8 +153,8 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     end
     api.cmd.sendCommand(
         api.cmd.make.buildProposal(proposal, context, isIgnoreErrors), -- the 3rd param is 'ignore errors'; wrong proposals will be discarded anyway,
-        function(result, success)
-            if not(success) then
+        function(result, isSuccess)
+            if not(isSuccess) then
                 logger.print('moveConstruction failed')
                 -- logger.print('moveConstruction result = ') logger.debugPrint(result)
                 return
@@ -196,12 +196,12 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
                     logger.print('upgradeConstruction succeeded') logger.debugPrint(upgradedConId)
                 end,
                 function(error)
-                    if forcedConTransf then
+                    if forcedConTransf ~= nil then
                         logger.print('upgradeConstruction failed, revert failed, giving up')
                     elseif isIgnoreErrors then
                         logger.print('upgradeConstruction failed, ignoring')
                     else
-                        logger.print('upgradeConstruction failed, a path has probably been broken')
+                        logger.print('upgradeConstruction failed, a path has probably been broken, attempting to revert')
                         actions.moveConstruction(conId, constants.idTransf, false, true, oldConTransf)
                     end
                 end
