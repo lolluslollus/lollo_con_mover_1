@@ -1,8 +1,8 @@
 local constants = {
     bigLinearShift = 1.0, -- 1 metre
     bigRotShift = math.pi / 16, -- like in the game with <m> and <n>
-    smallLinearShift = 0.1,
-    smallRotShift = math.pi / 160,
+    smallLinearShift = 0.05,
+    smallRotShift = math.pi / 320,
 
     idTransf = {1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1},
 
