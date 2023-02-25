@@ -27,6 +27,8 @@ return {
         local con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.fileName) then return end
 
+        if con.fileName == 'lollo_freestyle_train_station/auto_fence.con' then return end -- it crashes with no useful messages with the auto fence
+
         xpcall(
             function()
                 guiHelpers.showShiftWindow(
