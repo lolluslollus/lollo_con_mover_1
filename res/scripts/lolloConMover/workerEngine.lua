@@ -95,6 +95,8 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
     end
     newParams.seed = oldCon.params.seed + 1
     newCon.params = newParams
+    local frozenEdgesCountBak = not(oldCon.frozenEdges) and 0 or #oldCon.frozenEdges
+    local frozenNodesCountBak = not(oldCon.frozenNodes) and 0 or #oldCon.frozenNodes
     local paramsBak = arrayUtils.cloneDeepOmittingFields(newParams, {'seed'})
 
     local oldConTransf = transfUtilsUG.new(oldCon.transf:cols(0), oldCon.transf:cols(1), oldCon.transf:cols(2), oldCon.transf:cols(3))
@@ -186,6 +188,10 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
 
             xpcall(
                 function()
+                    if frozenEdgesCountBak == 0 and frozenNodesCountBak then
+                        logger.print('no frozen edges and no frozen nodes: upgrade skipped')
+                        return
+                    end
                     -- UG TODO there is no such thing in the new api,
                     -- nor an upgrade event, which could be useful
                     local upgradedConId = game.interface.upgradeConstruction(
