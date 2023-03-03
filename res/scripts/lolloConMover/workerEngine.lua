@@ -188,7 +188,7 @@ actions.moveConstruction = function(conId, deltaTransf, isRotateTransf, isIgnore
 
             xpcall(
                 function()
-                    if frozenEdgesCountBak == 0 and frozenNodesCountBak then
+                    if frozenEdgesCountBak == 0 and frozenNodesCountBak == 0 then
                         logger.print('no frozen edges and no frozen nodes: upgrade skipped')
                         return
                     end
