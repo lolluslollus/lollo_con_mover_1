@@ -13,7 +13,8 @@
         "debugPrint",
         "game",
         "data",
-        "_"
+        "_",
+        "addModifier"
     ],
     "Lua.diagnostics.disable": [
         "unused-local"

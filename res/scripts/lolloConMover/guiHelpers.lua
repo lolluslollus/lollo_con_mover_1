@@ -31,6 +31,10 @@ local data = {
     isFineAdjustmentsOn = false,
     isIgnoreErrorsOn = true,
     isShowingWarning = false,
+    marginX = 400,
+    marginY = 100,
+    windowSizeX = 360,
+    windowSizeY = 360,
 }
 
 local utils = {
@@ -96,7 +100,7 @@ return {
         if window == nil then
             window = api.gui.comp.Window.new(_texts.shiftWindowTitle, layout)
             window:setId(constants.guiIds.shiftWindow)
-            window:setSize(api.gui.util.Size.new(360, 360))
+            window:setSize(api.gui.util.Size.new(data.windowSizeX, data.windowSizeY))
         else
             window:setContent(layout)
             window:setVisible(true, false)
@@ -106,6 +110,16 @@ return {
         -- local position = api.gui.util.getMouseScreenPos()
         -- window:setPosition(position.x + constants.windowXShift, position.y + constants.windowYShift)
         window:setGravity(4, 0) -- LOLLO TODO check this
+        -- prevent window getting out of bounds
+        local gameContentRect = api.gui.util.getGameUI():getContentRect()
+        local windowContentRect = window:getContentRect()
+        if (windowContentRect.x + data.marginX) > gameContentRect.w then
+            window:setPosition(gameContentRect.w - data.marginX, data.marginY)
+        end
+        if (windowContentRect.y + data.marginY) > gameContentRect.h then
+            window:setPosition(gameContentRect.w - data.marginX, data.marginY)
+        end
+
         window:addHideOnCloseHandler()
 
         local _y0 = 15
