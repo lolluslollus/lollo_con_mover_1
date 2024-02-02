@@ -91,6 +91,29 @@ local utils = {
         -- posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
         game.gui.setCamera({position[1], position[2], cameraData[3], cameraData[4], cameraData[5]})
     end,
+    ---position window keeping it within the screen
+    ---@param window any
+    ---@param initialPosition {x:number, y:number}|nil
+    setWindowPosition = function(window, initialPosition)
+        local gameContentRect = api.gui.util.getGameUI():getContentRect()
+        local windowContentRect = window:getContentRect()
+        local windowMinimumSize = window:calcMinimumSize()
+
+        local windowHeight = math.max(windowContentRect.h, windowMinimumSize.h)
+        local windowWidth = math.max(windowContentRect.w, windowMinimumSize.w)
+        local positionX = (initialPosition ~= nil and initialPosition.x) or math.max(0, (gameContentRect.w - windowWidth) * 0.5)
+        -- local positionY = (initialPosition ~= nil and initialPosition.y) or math.max(0, (gameContentRect.h - windowHeight) * 0.5)
+        local positionY = (initialPosition ~= nil and initialPosition.y) or 50
+
+        if (positionX + windowWidth) > gameContentRect.w then
+            positionX = math.max(0, gameContentRect.w - windowWidth)
+        end
+        if (positionY + windowHeight) > gameContentRect.h then
+            positionY = math.max(0, gameContentRect.h - windowHeight -100)
+        end
+
+        window:setPosition(math.floor(positionX), math.floor(positionY))
+    end
 }
 
 return {
@@ -107,18 +130,8 @@ return {
         end
         window:setResizable(true)
         -- window:setHighlighted(true)
-        -- local position = api.gui.util.getMouseScreenPos()
-        -- window:setPosition(position.x + constants.windowXShift, position.y + constants.windowYShift)
-        window:setGravity(4, 0) -- LOLLO TODO check this
-        -- prevent window getting out of bounds
-        local gameContentRect = api.gui.util.getGameUI():getContentRect()
-        local windowContentRect = window:getContentRect()
-        if (windowContentRect.x + data.marginX) > gameContentRect.w then
-            window:setPosition(gameContentRect.w - data.marginX, data.marginY)
-        end
-        if (windowContentRect.y + data.marginY) > gameContentRect.h then
-            window:setPosition(gameContentRect.w - data.marginX, data.marginY)
-        end
+
+        utils.setWindowPosition(window)
 
         window:addHideOnCloseHandler()
 
