@@ -24,6 +24,12 @@ local constants = {
     windowYShift = 100,
 
     guiIds = {
+        cameraIcons = {
+            east = 'lollo_con_mover_camera_icon_east',
+            north = 'lollo_con_mover_camera_icon_north',
+            south = 'lollo_con_mover_camera_icon_south',
+            west = 'lollo_con_mover_camera_icon_west',
+        },
         operationOnOffButton = 'lollo_con_mover_on_off_button',
         shiftWindow = 'lollo_con_mover_shift_window',
         warningWindowWithMessage = 'lollo_con_mover_warning_window_with_message',

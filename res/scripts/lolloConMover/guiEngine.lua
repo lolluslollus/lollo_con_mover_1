@@ -33,12 +33,12 @@ return {
             function()
                 guiHelpers.showShiftWindow(
                     _conId,
-                    function(fieldName, fieldValue, isIgnoreErrors)
+                    function(fieldName, fieldValue, isIgnoreErrors, isAbsoluteNWSE)
                         local cameraRotZTransf = constants.idTransf
                         local cameraData = game.gui.getCamera()
                         if not(cameraData) then
                             logger.warn('cannot get camera')
-                        else
+                        elseif not(isAbsoluteNWSE) then
                             -- cameraData looks like posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
                             local cameraRotZ = cameraData[4] or 0
                             logger.print('cameraData[4] =', cameraData[4] or 'NIL')

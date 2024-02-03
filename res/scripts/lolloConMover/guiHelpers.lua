@@ -5,6 +5,7 @@ local transfUtilsUG = require('transf')
 
 
 local _texts = {
+    absoluteNWSE = _('AbsoluteNWSE'),
     conId = _('ConId'),
     fineAdjustments = _('FineAdjustments'),
     goThere = _('GoThere'),
@@ -28,13 +29,14 @@ local _texts = {
 }
 
 local data = {
+    isAbsoluteNWSEOn = false,
     isFineAdjustmentsOn = false,
     isIgnoreErrorsOn = true,
     isShowingWarning = false,
     marginX = 400,
     marginY = 100,
-    windowSizeX = 360,
-    windowSizeY = 360,
+    windowSizeX = 400,
+    windowSizeY = 400,
 }
 
 local utils = {
@@ -121,7 +123,7 @@ return {
         local layout = api.gui.layout.AbsoluteLayout.new()
         local window = api.gui.util.getById(constants.guiIds.shiftWindow)
         if window == nil then
-            window = api.gui.comp.Window.new(_texts.shiftWindowTitle, layout)
+            window = api.gui.comp.Window.new(_texts.shiftWindowTitle .. ' - ' .. _texts.conId .. tostring(conId), layout)
             window:setId(constants.guiIds.shiftWindow)
             window:setSize(api.gui.util.Size.new(data.windowSizeX, data.windowSizeY))
         else
@@ -139,9 +141,9 @@ return {
 
         local infoIcon = api.gui.comp.ImageView.new('ui/button/medium/info.tga')
         infoIcon:setTooltip(_texts.note)
-        layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0, 40, 40))
+        layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0 + 20, 40, 40))
 
-        layout:addItem(api.gui.comp.TextView.new(_texts.conId .. tostring(conId)), api.gui.util.Rect.new(240, _y0, 100, 40))
+        -- layout:addItem(api.gui.comp.TextView.new(_texts.conId .. tostring(conId)), api.gui.util.Rect.new(240, _y0, 100, 40))
 
         local function addGotoButton()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -156,6 +158,29 @@ return {
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(0, _y0, 100, 40))
+        end
+        local function addAbsoluteNWSEToggleButton()
+            local toggleButtonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
+            utils.modifyOnOffButtonLayout(toggleButtonLayout, data.isAbsoluteNWSEOn, _texts.absoluteNWSE)
+            local toggleButton = api.gui.comp.ToggleButton.new(toggleButtonLayout)
+            toggleButton:setSelected(data.isAbsoluteNWSEOn, false)
+            toggleButton:onToggle(function(isOn) -- isOn is boolean
+                -- logger.print('isAbsoluteNWSEOn toggled; isOn = ', isOn)
+                while toggleButtonLayout:getNumItems() > 0 do
+                    local item0 = toggleButtonLayout:getItem(0)
+                    toggleButtonLayout:removeItem(item0)
+                end
+
+                for _, id in pairs(constants.guiIds.cameraIcons) do
+                    local icon = api.gui.util.getById(id)
+                    if icon ~= nil then icon:setVisible(not(isOn), false) end
+                end
+
+                utils.modifyOnOffButtonLayout(toggleButtonLayout, isOn, _texts.absoluteNWSE)
+                toggleButton:setSelected(isOn, false)
+                data.isAbsoluteNWSEOn = isOn
+            end)
+            layout:addItem(toggleButton, api.gui.util.Rect.new(230, _y0, 100, 40))
         end
         local function addIgnoreErrorsToggleButton()
             local toggleButtonLayout = api.gui.layout.BoxLayout.new('HORIZONTAL')
@@ -189,55 +214,75 @@ return {
                 toggleButton:setSelected(isOn, false)
                 data.isFineAdjustmentsOn = isOn
             end)
-            layout:addItem(toggleButton, api.gui.util.Rect.new(190, _y0 + 40, 100, 40))
+            layout:addItem(toggleButton, api.gui.util.Rect.new(230, _y0 + 40, 100, 40))
         end
         local function addXMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_left.tga'))
-            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
+
+            local cameraIcon = api.gui.comp.ImageView.new('ui/icons/windows/camera.tga')
+            cameraIcon:setId(constants.guiIds.cameraIcons.west)
+            cameraIcon:setVisible(not(data.isAbsoluteNWSEOn), false)
+            buttonLayout:addItem(cameraIcon)
+
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftX, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftX, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 120, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 140, 100, 40))
         end
         local function addXPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_right.tga'))
-            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
+
+            local cameraIcon = api.gui.comp.ImageView.new('ui/icons/windows/camera.tga')
+            cameraIcon:setId(constants.guiIds.cameraIcons.east)
+            cameraIcon:setVisible(not(data.isAbsoluteNWSEOn), false)
+            buttonLayout:addItem(cameraIcon)
+
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftX, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftX, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 120, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 140, 100, 40))
         end
         local function addYMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_down.tga'))
-            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
+
+            local cameraIcon = api.gui.comp.ImageView.new('ui/icons/windows/camera.tga')
+            cameraIcon:setId(constants.guiIds.cameraIcons.south)
+            cameraIcon:setVisible(not(data.isAbsoluteNWSEOn), false)
+            buttonLayout:addItem(cameraIcon)
+
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftY, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftY, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 160, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 180, 100, 40))
         end
         local function addYPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/arrow_style1_up.tga'))
-            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/icons/windows/camera.tga'))
+
+            local cameraIcon = api.gui.comp.ImageView.new('ui/icons/windows/camera.tga')
+            cameraIcon:setId(constants.guiIds.cameraIcons.north)
+            cameraIcon:setVisible(not(data.isAbsoluteNWSEOn), false)
+            buttonLayout:addItem(cameraIcon)
+
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftY, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftY, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 80, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 100, 100, 40))
         end
         local function addZMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -245,10 +290,10 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftZ, -utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftZ, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(280, _y0 + 160, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(300, _y0 + 180, 100, 40))
         end
         local function addZPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -256,10 +301,10 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftZ, utils.getLinearShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transNames.shiftZ, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(280, _y0 + 80, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(300, _y0 + 100, 100, 40))
         end
         local function addRotXMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -270,7 +315,7 @@ return {
                     callback(constants.transNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 200, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 240, 100, 40))
         end
         local function addRotXPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -281,7 +326,7 @@ return {
                     callback(constants.transNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 200, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 240, 100, 40))
         end
         local function addRotYMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -292,7 +337,7 @@ return {
                     callback(constants.transNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 240, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 280, 100, 40))
         end
         local function addRotYPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -303,7 +348,7 @@ return {
                     callback(constants.transNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 240, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 280, 100, 40))
         end
         local function addRotZMinus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -314,7 +359,7 @@ return {
                     callback(constants.transNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 280, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 320, 100, 40))
         end
         local function addRotZPlus1Button()
             local button, buttonLayout = utils.getButtonAndItsLayout()
@@ -325,9 +370,10 @@ return {
                     callback(constants.transNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
-            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 280, 100, 40))
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 320, 100, 40))
         end
         addGotoButton()
+        addAbsoluteNWSEToggleButton()
         addIgnoreErrorsToggleButton()
         addFineAdjustmentsToggleButton()
         addXMinus1Button()
