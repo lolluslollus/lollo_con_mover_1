@@ -14,7 +14,8 @@
         "game",
         "data",
         "_",
-        "addModifier"
+        "addModifier",
+        "getCurrentModId"
     ],
     "Lua.diagnostics.disable": [
         "unused-local"

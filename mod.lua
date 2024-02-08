@@ -1,4 +1,5 @@
 local logger = require('lolloConMover.logger')
+local modSettings = require('lolloConMover.modSettings')
 local stringUtils = require('lolloConMover.stringUtils')
 local utils = require('lolloConMover.utils')
 
@@ -9,16 +10,21 @@ function data()
 		'STREET_CONSTRUCTION',
 		'TRACK_CONSTRUCTION',
 	}
-	local _excludedConFileNames = {
-		'wk_arrow_end.con',
-		'wk_arrow_start.con',
-		'wk_info.con',
-		'wk_marker_01.con',
-		'wk_marker_02.con',
-		'wk_mrkx_delete_edges.con',
-		'wk_mrkx_make_parallel.con',
-		'wk_mrkx_modify.con',
-	}
+	-- local _excludedConFileNames = {
+	-- 	'wk_arrow_end.con',
+	-- 	'wk_arrow_start.con',
+	-- 	'wk_dot.con',
+	-- 	'wk_info.con',
+	-- 	'wk_marker_01.con',
+	-- 	'wk_marker_02.con',
+	-- 	'​wk_marker_03.con',
+	-- 	'wk_mrkx_delete_edges.con',
+	-- 	'wk_mrkx_equalize_ramp.con',
+	-- 	'wk_mrkx_make_parallel.con',
+	-- 	'wk_mrkx_modify.con',
+	-- 	'wk_mrkx_splitter.con',
+	-- 	'wk_mrkx_set_tram_masts.con',
+	-- }
 	local function loadConstructionFunc(fileName, data)
 		if not(data) or (type(data.updateFn) ~= 'function') then return data end
 
@@ -28,9 +34,11 @@ function data()
 		end
 		if not(isConTypeAllowed) then return data end
 
-		for _, fna in pairs(_excludedConFileNames) do
-			if stringUtils.stringEndsWith(fileName, fna) then return data end
-		end
+		for match in string.gmatch(fileName, '(/wk_[^(./)]+.con)') do return data end
+
+		-- for _, fna in pairs(_excludedConFileNames) do
+		-- 	if stringUtils.stringEndsWith(fileName, fna) then return data end
+		-- end
 
 		-- LOLLO TODO do we need this? We probably do with some mods. I took it out with minor 13.
 		-- if type(data.upgradeFn) ~= 'function' then
@@ -73,7 +81,7 @@ function data()
 
 	return {
 		info = {
-			minorVersion = 12,
+			minorVersion = 13,
 			severityAdd = "NONE",
 			severityRemove = "NONE",
 			name = _("ModName"),
@@ -85,9 +93,20 @@ function data()
 					name = "lollus",
 					role = "CREATOR"
 				}
-			}
+			},
+			params = {
+				{
+					key = 'forceOtherCons',
+					name = _('ForceOtherCons'),
+					values = { 'OFF', 'ON' },
+                    defaultIndex = 1, -- LOLLO NOTE set this directly to avoid crashes; keep modSettings up to date if you alter this
+				},
+            },
 		},
 		runFn = function (settings, modParams)
+			modSettings.setModParamsFromRunFn(modParams)
+			if game.config._lolloConMover.forceOtherCons == 0 then return end
+
 			addModifier('loadConstruction', loadConstructionFunc)
 		end,
 	}
