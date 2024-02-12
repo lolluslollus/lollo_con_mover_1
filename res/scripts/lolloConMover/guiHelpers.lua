@@ -406,7 +406,7 @@ return {
 
         window:setHighlighted(true)
         local position = api.gui.util.getMouseScreenPos()
-        window:setPosition(position.x + constants.windowXShift, position.y)
+        window:setPosition(position.x -200, position.y)
         -- window:addHideOnCloseHandler()
         window:onClose(
             function()

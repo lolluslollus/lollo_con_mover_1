@@ -28,7 +28,7 @@ function data()
 		},
 		runFn = function (settings, modParams)
 			modSettings.setModParamsFromRunFn(modParams)
-			if game.config._lolloConMover.forceOtherCons == 0 then return end
+			if game.config._lolloConMover.forceOtherCons ~= 1 then return end
 
 			addModifier('loadConstruction', loadConstructionFunc)
 		end,

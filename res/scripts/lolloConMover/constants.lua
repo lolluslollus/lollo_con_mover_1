@@ -20,9 +20,6 @@ local constants = {
         shiftZ = 'shiftZ',
     },
 
-    windowXShift = -200,
-    windowYShift = 100,
-
     guiIds = {
         cameraIcons = {
             east = 'lollo_con_mover_camera_icon_east',
