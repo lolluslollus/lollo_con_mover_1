@@ -4,7 +4,7 @@ local modSettings = require('lolloConMover.modSettings')
 function data()
 	return {
 		info = {
-			minorVersion = 13,
+			minorVersion = 14,
 			severityAdd = "NONE",
 			severityRemove = "NONE",
 			name = _("ModName"),
