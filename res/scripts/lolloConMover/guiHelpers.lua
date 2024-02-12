@@ -119,7 +119,7 @@ local utils = {
 }
 
 return {
-    showShiftWindow = function(conId, callback)
+    showMoveWindow = function(conId, callback)
         local layout = api.gui.layout.AbsoluteLayout.new()
         local window = api.gui.util.getById(constants.guiIds.shiftWindow)
         if window == nil then

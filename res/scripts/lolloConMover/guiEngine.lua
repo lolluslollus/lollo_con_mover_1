@@ -31,12 +31,14 @@ return {
 
         xpcall(
             function()
-                guiHelpers.showShiftWindow(
+                guiHelpers.showMoveWindow(
                     _conId,
                     function(fieldName, fieldValue, isIgnoreErrors, isAbsoluteNWSE)
-                        local cameraRotZTransf = constants.idTransf
+                        logger.print('showMoveWindow callback firing, isAbsoluteNWSE = ' .. tostring(isAbsoluteNWSE))
+                        local cameraRotZTransf = nil
                         local cameraData = game.gui.getCamera()
                         if not(cameraData) then
+                            cameraRotZTransf = constants.idTransf
                             logger.warn('cannot get camera')
                         elseif not(isAbsoluteNWSE) then
                             -- cameraData looks like posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
@@ -47,7 +49,7 @@ return {
                             cameraRotZTransf = transfUtilsUG.rotZ(cameraRotZ + math.pi / 2)
                         end
                         _sendScriptEvent(
-                            constants.events.shift_construction,
+                            constants.events.move_construction,
                             {
                                 cameraRotZTransf = cameraRotZTransf,
                                 conId = _conId,
