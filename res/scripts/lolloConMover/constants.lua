@@ -8,7 +8,7 @@ local constants = {
 
     eventId = '__lollo_construction_mover__',
     events = {
-        shift_construction = 'shift_construction',
+        move_construction = 'move_construction',
         toggle_notaus = 'toggle_notaus'
     },
     transNames = {
@@ -19,9 +19,6 @@ local constants = {
         shiftY = 'shiftY',
         shiftZ = 'shiftZ',
     },
-
-    windowXShift = -200,
-    windowYShift = 100,
 
     guiIds = {
         cameraIcons = {

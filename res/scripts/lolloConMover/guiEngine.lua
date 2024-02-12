@@ -31,28 +31,35 @@ return {
 
         xpcall(
             function()
-                guiHelpers.showShiftWindow(
+                guiHelpers.showMoveWindow(
                     _conId,
                     function(fieldName, fieldValue, isIgnoreErrors, isAbsoluteNWSE)
-                        local cameraRotZTransf = constants.idTransf
-                        local cameraData = game.gui.getCamera()
-                        if not(cameraData) then
-                            logger.warn('cannot get camera')
-                        elseif not(isAbsoluteNWSE) then
-                            -- cameraData looks like posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
-                            local cameraRotZ = cameraData[4] or 0
-                            logger.print('cameraData[4] =', cameraData[4] or 'NIL')
-                            logger.print('cameraData[4] normalised =', math.fmod(cameraData[4], math.pi * 2))
-                            -- same as cameraData[4] % (math.pi * 2)
-                            cameraRotZTransf = transfUtilsUG.rotZ(cameraRotZ + math.pi / 2)
+                        logger.print('showMoveWindow callback firing, isAbsoluteNWSE = ' .. tostring(isAbsoluteNWSE))
+                        local refTransf = constants.idTransf
+                        if not(isAbsoluteNWSE) then
+                            local cameraData = game.gui.getCamera() -- UG TODO the api does not work
+                            if not(cameraData) then
+                                logger.warn('cannot get camera')
+                            else
+                                -- cameraData looks like posX, posY, distance, rotZ (not normalised), tanZ (max = 1)
+                                local cameraRotZ = cameraData[4] or 0
+                                logger.print('cameraData[4] =', cameraData[4] or 'NIL')
+                                logger.print('cameraData[4] normalised =', math.fmod(cameraData[4], math.pi * 2))
+                                -- same as cameraData[4] % (math.pi * 2)
+                                refTransf = transfUtilsUG.rotZ(cameraRotZ + math.pi / 2)
+                            end
+                        else
+                            -- LOLLO NOTE must read the con transf again coz it does not carry over
+                            local _con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
+                            refTransf = transfUtilsUG.new(_con.transf:cols(0), _con.transf:cols(1), _con.transf:cols(2), {x = 0, y = 0, z = 0, w = 1})
                         end
                         _sendScriptEvent(
-                            constants.events.shift_construction,
+                            constants.events.move_construction,
                             {
-                                cameraRotZTransf = cameraRotZTransf,
+                                refTransf = refTransf,
                                 conId = _conId,
                                 [fieldName] = fieldValue,
-                                isIgnoreErrors = isIgnoreErrors
+                                isIgnoreErrors = isIgnoreErrors and true or false
                             }
                         )
                     end

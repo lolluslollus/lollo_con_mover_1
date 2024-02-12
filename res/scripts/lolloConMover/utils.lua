@@ -1,3 +1,5 @@
+local logger = require ('lolloConMover.logger')
+
 local utils = {}
 
 utils.isValidId = function(id)
@@ -42,6 +44,27 @@ utils.getDummyTerrainAlignmentLists = function()
         optional = true,
         faces =  { }
     } }
+end
+
+utils.renameConstruction = function(conId, newName)
+    -- logger.print('renameConstruction starting, conId =', (conId or 'NIL'), 'newName =', newName or 'NIL')
+    if not(utils.isValidAndExistingId(conId)) then return end
+
+    xpcall(
+        function ()
+            api.cmd.sendCommand(
+                api.cmd.make.setName(conId, newName or ''),
+                function(result, isSuccess)
+                    if not(isSuccess) then
+                        logger.warn('renameConstruction failed')
+                    end
+                    -- logger.print('renameConstruction success = ', isSuccess)
+                    -- logger.print('renameConstruction result = ') logger.debugPrint(result)
+                end
+            )
+        end,
+        logger.xpErrorHandler
+    )
 end
 
 return utils

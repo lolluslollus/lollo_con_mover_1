@@ -119,7 +119,7 @@ local utils = {
 }
 
 return {
-    showShiftWindow = function(conId, callback)
+    showMoveWindow = function(conId, callback)
         local layout = api.gui.layout.AbsoluteLayout.new()
         local window = api.gui.util.getById(constants.guiIds.shiftWindow)
         if window == nil then
@@ -406,7 +406,7 @@ return {
 
         window:setHighlighted(true)
         local position = api.gui.util.getMouseScreenPos()
-        window:setPosition(position.x + constants.windowXShift, position.y)
+        window:setPosition(position.x -200, position.y)
         -- window:addHideOnCloseHandler()
         window:onClose(
             function()
