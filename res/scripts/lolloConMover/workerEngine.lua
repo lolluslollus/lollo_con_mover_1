@@ -207,7 +207,7 @@ return {
                 if name == constants.events.move_construction then
                     --[[
                         local sampleArgs = {
-                            cameraRotZTransf = { 0.95053715229997, -0.31061088534927, 0, 0, 0.31061088534927, 0.95053715229997, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, }, -- table or nil
+                            refTransf = { 0.95053715229997, -0.31061088534927, 0, 0, 0.31061088534927, 0.95053715229997, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, }, -- table
                             conId = 32148,
                             isIgnoreErrors = true,
                             shiftX = -1,
@@ -223,7 +223,7 @@ return {
                         deltaTransf = transfUtilsUG.rotZ(args[constants.transNames.rotZ])
                     else
                         isRotateTransf = false
-                        logger.print('args.cameraRotZTransf =') logger.debugPrint(args.cameraRotZTransf)
+                        logger.print('args.refTransf =') logger.debugPrint(args.refTransf)
                         deltaTransf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,
@@ -231,16 +231,8 @@ return {
                             (args[constants.transNames.shiftX] or 0), (args[constants.transNames.shiftY] or 0), (args[constants.transNames.shiftZ] or 0), 1
                         }
                         logger.print('deltaTransf first =') logger.debugPrint(deltaTransf)
-                        if type(args.cameraRotZTransf) == 'table' then
-                            deltaTransf = transfUtilsUG.mul(args.cameraRotZTransf, deltaTransf)
-                            logger.print('deltaTransf for relative NWSE =') logger.debugPrint(deltaTransf)
-                        else
-                            local con = api.engine.getComponent(args.conId, api.type.ComponentType.CONSTRUCTION)
-                            local conNoTraslTransf = transfUtilsUG.new(con.transf:cols(0), con.transf:cols(1), con.transf:cols(2), {x = 0, y = 0, z = 0, w = 1})
-                            logger.print('conNoTraslTransf =') logger.debugPrint(conNoTraslTransf)
-                            deltaTransf = transfUtilsUG.mul(conNoTraslTransf, deltaTransf)
-                            logger.print('deltaTransf for absoluteNWSE =') logger.debugPrint(deltaTransf)
-                        end
+                        deltaTransf = transfUtilsUG.mul(args.refTransf, deltaTransf)
+                        logger.print('deltaTransf adjusted =') logger.debugPrint(deltaTransf)
                         deltaTransf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,
