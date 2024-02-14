@@ -5,7 +5,7 @@ function data()
                 [[
 Turn this mod on and off from the bottom bar.
 When it is on and you select certain constructions, a popup will appear.
-Here, you can shift and rotate the construction after it has been built.
+Here you can move, rotate and scale a construction after it has been built.
 
 NOTES:
 - Only certain types of constructions can be rearranged, mostly assets. Stations, depots or town buildings cannot.
@@ -21,6 +21,7 @@ NOTES:
             ["ForceOtherCons"] = "Try to make more constructions moveable",
             ["GoThere"] = "Go There",
             ["IgnoreErrors"] = "Ignore Errors",
+            ["MoveWindowTitle"] = "Construction Mover",
             ["North"] = "North",
             ["OperationOff"] = "Construction mover OFF",
             ["OperationOn"] = "Construction mover ON",
@@ -30,7 +31,18 @@ NOTES:
             ["RotYPlus"] = "Y axis ↑",
             ["RotZMinus"] = "Z axis ↓",
             ["RotZPlus"] = "Z axis ↑",
-            ["ShiftWindowTitle"] ="Construction Mover",
+            ["ScaleXMinus"] = "X axis ↓",
+            ["ScaleXPlus"] = "X axis ↑",
+            ["ScaleYMinus"] = "Y axis ↓",
+            ["ScaleYPlus"] = "Y axis ↑",
+            ["ScaleZMinus"] = "Z axis ↓",
+            ["ScaleZPlus"] = "Z axis ↑",
+            ["SkewXZMinus"] = "X-Z axis ↓",
+            ["SkewXZPlus"] = "X-Z axis ↑",
+            ["SkewYZMinus"] = "Y-Z axis ↓",
+            ["SkewYZPlus"] = "Y-Z axis ↑",
+            ["SkewXYMinus"] = "X-Y axis ↓",
+            ["SkewXYPlus"] = "X-Y axis ↑",
             ["South"] = "South",
             ["Left"] = "Left",
             ["Right"] = "Right",

@@ -1,4 +1,5 @@
 -- NOTE that the state must be read-only here coz we are in the GUI thread
+local conChooser = require('lolloConMover.conChooser')
 local constants = require('lolloConMover.constants')
 local guiHelpers = require('lolloConMover.guiHelpers')
 local logger = require('lolloConMover.logger')
@@ -27,6 +28,20 @@ return {
         local con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.fileName) then return end
 
+--[[
+        if not(conChooser.isConTypeAllowed_basedOnFileName(oldCon.fileName)) then
+            logger.print('moveConstruction is skipping the con with fileName = ' .. tostring(oldCon.fileName) .. ' because it is not in the whitelist')
+            return
+        end
+        if not(conChooser.isConAllowed_basedOnFileName(oldCon.fileName)) then
+            logger.print('moveConstruction is skipping the con with blacklisted fileName = ' .. tostring(oldCon.fileName))
+            return
+        end
+        if not(conChooser.isConAllowed_basedOnParams(oldCon.fileName, oldCon.params)) then
+            logger.print('moveConstruction is skipping the con with fileName = ' .. tostring(oldCon.fileName) .. ' because it has blacklisted params')
+            return
+        end
+]]
         xpcall(
             function()
                 guiHelpers.showMoveWindow(

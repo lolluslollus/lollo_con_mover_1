@@ -10,6 +10,7 @@ local _texts = {
     fineAdjustments = _('FineAdjustments'),
     goThere = _('GoThere'),
     ignoreErrors = _('IgnoreErrors'),
+    moveWindowTitle = _('MoveWindowTitle'),
     note = _('Note'),
     operationOff = _('OperationOff'),
     operationOn = _('OperationOn'),
@@ -19,7 +20,18 @@ local _texts = {
     rotYPlus = _('RotYPlus'),
     rotZMinus = _('RotZMinus'),
     rotZPlus = _('RotZPlus'),
-    shiftWindowTitle = _('ShiftWindowTitle'),
+    scaleXMinus = _('ScaleXMinus'),
+    scaleXPlus = _('ScaleXPlus'),
+    scaleYMinus = _('ScaleYMinus'),
+    scaleYPlus = _('ScaleYPlus'),
+    scaleZMinus = _('ScaleZMinus'),
+    scaleZPlus = _('ScaleZPlus'),
+    skewXZMinus = _('SkewXZMinus'),
+    skewXZPlus = _('SkewXZPlus'),
+    skewYZMinus = _('SkewYZMinus'),
+    skewYZPlus = _('SkewYZPlus'),
+    skewXYMinus = _('SkewXYMinus'),
+    skewXYPlus = _('SkewXYPlus'),
     xMinus = _('West'),
     xPlus = _('East'),
     yMinus = _('South'),
@@ -33,10 +45,8 @@ local data = {
     isFineAdjustmentsOn = false,
     isIgnoreErrorsOn = true,
     isShowingWarning = false,
-    marginX = 400,
-    marginY = 100,
     windowSizeX = 400,
-    windowSizeY = 400,
+    windowSizeY = 560,
 }
 
 local utils = {
@@ -63,6 +73,12 @@ local utils = {
     end,
     getRotShift = function()
         return data.isFineAdjustmentsOn and constants.smallRotShift or constants.bigRotShift
+    end,
+    getScaleShift = function()
+        return constants.scaleShift
+    end,
+    getSkewShift = function()
+        return constants.skewShift
     end,
     modifyOnOffButtonLayout = function(layout, isOn, text)
         if isOn then
@@ -121,11 +137,11 @@ local utils = {
 return {
     showMoveWindow = function(conId, callback)
         local layout = api.gui.layout.AbsoluteLayout.new()
-        local window = api.gui.util.getById(constants.guiIds.shiftWindow)
-        local windowTitle = _texts.shiftWindowTitle .. ' - ' .. _texts.conId .. tostring(conId)
+        local window = api.gui.util.getById(constants.guiIds.moveWindow)
+        local windowTitle = _texts.moveWindowTitle .. ' - ' .. _texts.conId .. tostring(conId)
         if window == nil then
             window = api.gui.comp.Window.new(windowTitle, layout)
-            window:setId(constants.guiIds.shiftWindow)
+            window:setId(constants.guiIds.moveWindow)
             window:setSize(api.gui.util.Size.new(data.windowSizeX, data.windowSizeY))
         else
             window:setTitle(windowTitle)
@@ -135,7 +151,7 @@ return {
         window:setResizable(true)
         -- window:setHighlighted(true)
 
-        utils.setWindowPosition(window)
+        utils.setWindowPosition(window, {x = 0})
 
         window:addHideOnCloseHandler()
 
@@ -230,7 +246,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftX, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    callback(constants.transfNames.traslX, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 140, 100, 40))
@@ -247,7 +263,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftX, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    callback(constants.transfNames.traslX, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 140, 100, 40))
@@ -264,7 +280,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftY, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    callback(constants.transfNames.traslY, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 180, 100, 40))
@@ -281,7 +297,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftY, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    callback(constants.transfNames.traslY, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 100, 100, 40))
@@ -292,7 +308,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftZ, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    callback(constants.transfNames.traslZ, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(300, _y0 + 180, 100, 40))
@@ -303,7 +319,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.shiftZ, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    callback(constants.transfNames.traslZ, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(300, _y0 + 100, 100, 40))
@@ -314,7 +330,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transfNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 240, 100, 40))
@@ -325,7 +341,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transfNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 240, 100, 40))
@@ -336,7 +352,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transfNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 280, 100, 40))
@@ -347,7 +363,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transfNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 280, 100, 40))
@@ -358,7 +374,7 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZMinus))
             button:onClick(
                 function()
-                    callback(constants.transNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transfNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 320, 100, 40))
@@ -369,10 +385,76 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZPlus))
             button:onClick(
                 function()
-                    callback(constants.transNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    callback(constants.transfNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 320, 100, 40))
+        end
+        local function addScaleXMinus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/scale_minus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleXMinus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.scaleX, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 380, 100, 40))
+        end
+        local function addScaleXPlus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/scale_plus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleXPlus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.scaleX, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 380, 100, 40))
+        end
+        local function addScaleYMinus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/scale_minus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleYMinus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.scaleY, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 420, 100, 40))
+        end
+        local function addScaleYPlus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/scale_plus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleYPlus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.scaleY, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 420, 100, 40))
+        end
+        local function addScaleZMinus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/scale_minus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleZMinus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.scaleZ, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 460, 100, 40))
+        end
+        local function addScaleZPlus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/scale_plus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleZPlus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.scaleZ, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 460, 100, 40))
         end
         addGotoButton()
         addAbsoluteNWSEToggleButton()
@@ -390,6 +472,12 @@ return {
         addRotYPlus1Button()
         addRotZMinus1Button()
         addRotZPlus1Button()
+        addScaleXMinus1Button()
+        addScaleXPlus1Button()
+        addScaleYMinus1Button()
+        addScaleYPlus1Button()
+        addScaleZMinus1Button()
+        addScaleZPlus1Button()
     end,
 
     showWarningWindowWithMessage = function(text)
@@ -397,7 +485,7 @@ return {
         local layout = api.gui.layout.BoxLayout.new('VERTICAL')
         local window = api.gui.util.getById(constants.guiIds.warningWindowWithMessage)
         if window == nil then
-            window = api.gui.comp.Window.new(_texts.shiftWindowTitle, layout)
+            window = api.gui.comp.Window.new(_texts.moveWindowTitle, layout)
             window:setId(constants.guiIds.warningWindowWithMessage)
         else
             window:setContent(layout)
