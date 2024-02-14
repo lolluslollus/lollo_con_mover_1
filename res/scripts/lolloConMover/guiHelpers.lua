@@ -122,11 +122,13 @@ return {
     showMoveWindow = function(conId, callback)
         local layout = api.gui.layout.AbsoluteLayout.new()
         local window = api.gui.util.getById(constants.guiIds.shiftWindow)
+        local windowTitle = _texts.shiftWindowTitle .. ' - ' .. _texts.conId .. tostring(conId)
         if window == nil then
-            window = api.gui.comp.Window.new(_texts.shiftWindowTitle .. ' - ' .. _texts.conId .. tostring(conId), layout)
+            window = api.gui.comp.Window.new(windowTitle, layout)
             window:setId(constants.guiIds.shiftWindow)
             window:setSize(api.gui.util.Size.new(data.windowSizeX, data.windowSizeY))
         else
+            window:setTitle(windowTitle)
             window:setContent(layout)
             window:setVisible(true, false)
         end

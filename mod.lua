@@ -1,4 +1,4 @@
-local loadConstructionFunc = require('lolloConMover.updateOtherConstructions.loadConstructionFunc')
+local conChooser = require('lolloConMover.conChooser')
 local modSettings = require('lolloConMover.modSettings')
 
 function data()
@@ -30,7 +30,7 @@ function data()
 			modSettings.setModParamsFromRunFn(modParams)
 			if game.config._lolloConMover.forceOtherCons ~= 1 then return end
 
-			addModifier('loadConstruction', loadConstructionFunc)
+			addModifier('loadConstruction', conChooser.loadConstructionFunc)
 		end,
 	}
 end

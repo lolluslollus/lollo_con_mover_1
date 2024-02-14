@@ -1,4 +1,5 @@
 local arrayUtils = require('lolloConMover.arrayUtils')
+local conChooser = require('lolloConMover.conChooser')
 local constants = require('lolloConMover.constants')
 local logger = require ('lolloConMover.logger')
 local stateHelpers = require('lolloConMover.stateHelpers')
@@ -64,16 +65,34 @@ local actions = {
             logger.print('moveConstruction cannot shift construction with id =', conId or 'NIL', 'because it cannot be read')
             return
         end
-
+--[[
+        if not(conChooser.isConTypeAllowed_basedOnFileName(oldCon.fileName)) then
+            logger.print('moveConstruction is skipping the con with fileName = ' .. tostring(oldCon.fileName) .. ' because it is not in the whitelist')
+            return
+        end
+        if not(conChooser.isConAllowed_basedOnFileName(oldCon.fileName)) then
+            logger.print('moveConstruction is skipping the con with blacklisted fileName = ' .. tostring(oldCon.fileName))
+            return
+        end
+        if not(conChooser.isConAllowed_basedOnParams(oldCon.fileName, oldCon.params)) then
+            logger.print('moveConstruction is skipping the con with fileName = ' .. tostring(oldCon.fileName) .. ' because it has blacklisted params')
+            return
+        end
+]]
         local newCon = api.type.SimpleProposal.ConstructionEntity.new()
         newCon.fileName = oldCon.fileName
 
-        local newParams = {}
-        for oldKey, oldValue in pairs(oldCon.params) do
-            newParams[oldKey] = oldValue
-        end
-        newParams.seed = oldCon.params.seed + 1
+        local newParams = arrayUtils.cloneDeepOmittingFields(oldCon.params, nil, true)
+        newParams.seed = newParams.seed + 1
         newCon.params = newParams
+        -- LOLLO NOTE the following looks OK but fails with particular cons like 'lollo_freestyle_train_station/auto_fence.con'
+        -- local newParams = {}
+        -- for oldKey, oldValue in pairs(oldCon.params) do
+        --     newParams[oldKey] = oldValue
+        -- end
+        -- newParams.seed = oldCon.params.seed + 1
+        -- newCon.params = newParams
+
         local frozenEdgesCountBak = not(oldCon.frozenEdges) and 0 or #oldCon.frozenEdges
         local frozenNodesCountBak = not(oldCon.frozenNodes) and 0 or #oldCon.frozenNodes
         local paramsBak = arrayUtils.cloneDeepOmittingFields(newParams, {'seed'})
