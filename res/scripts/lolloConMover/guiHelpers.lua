@@ -32,6 +32,7 @@ local _texts = {
     skewYZPlus = _('SkewYZPlus'),
     skewXYMinus = _('SkewXYMinus'),
     skewXYPlus = _('SkewXYPlus'),
+    undo = _('Undo'),
     xMinus = _('West'),
     xPlus = _('East'),
     yMinus = _('South'),
@@ -41,6 +42,7 @@ local _texts = {
 }
 
 local data = {
+    conTransfs_indexedBy_conId = {},
     isAbsoluteNWSEOn = false,
     isFineAdjustmentsOn = false,
     isIgnoreErrorsOn = true,
@@ -68,6 +70,14 @@ local utils = {
             [3] = conTransf[15]
         }
     end,
+    getConstructionTransf = function(conId)
+        if not(edgeUtilsDumb.isValidAndExistingId(conId)) then return end
+
+        local con = api.engine.getComponent(conId, api.type.ComponentType.CONSTRUCTION)
+        if not(con) or not(con.transf) then return end
+
+        return transfUtilsUG.new(con.transf:cols(0), con.transf:cols(1), con.transf:cols(2), con.transf:cols(3))
+    end,
     getLinearShift = function()
         return data.isFineAdjustmentsOn and constants.smallLinearShift or constants.bigLinearShift
     end,
@@ -75,10 +85,10 @@ local utils = {
         return data.isFineAdjustmentsOn and constants.smallRotShift or constants.bigRotShift
     end,
     getScaleShift = function()
-        return constants.scaleShift
+        return data.isFineAdjustmentsOn and constants.smallScaleShift or constants.bigScaleShift
     end,
     getSkewShift = function()
-        return constants.skewShift
+        return data.isFineAdjustmentsOn and constants.smallSkewShift or constants.bigSkewShift
     end,
     modifyOnOffButtonLayout = function(layout, isOn, text)
         if isOn then
@@ -133,25 +143,106 @@ local utils = {
         window:setPosition(math.floor(positionX), math.floor(positionY))
     end
 }
+utils.undoBuffer = {
+    ---removes non existing objects from buffer - it does not check if they are constructions or something else
+    clean = function()
+        logger.print('data.conTransfs_indexedBy_conId before =') logger.debugPrint(data.conTransfs_indexedBy_conId)
+        for conId, transf in pairs(data.conTransfs_indexedBy_conId) do
+            if not edgeUtilsDumb.isValidAndExistingId(conId) then
+                data.conTransfs_indexedBy_conId[conId] = nil
+            end
+        end
+        logger.print('data.conTransfs_indexedBy_conId after =') logger.debugPrint(data.conTransfs_indexedBy_conId)
+    end,
+    ---returns nil or the buffered con transf
+    ---@param conId integer
+    ---@return table<number>|nil
+    get = function(conId)
+        if not(conId) then return nil end
+        return data.conTransfs_indexedBy_conId[conId]
+    end,
+    ---adds a construction to the buffer, returns nil or the current con transf
+    ---@param conId integer
+    ---@return table<number>|nil
+    init = function(conId)
+        local conTransf = utils.getConstructionTransf(conId)
+        if not(conTransf) then return nil end
+
+        if not(data.conTransfs_indexedBy_conId[conId]) then
+            logger.print('init undo buffer for conId ' .. tostring(conId))
+            data.conTransfs_indexedBy_conId[conId] = conTransf
+        end
+
+        return conTransf
+    end,
+    ---removes a construction from the buffer
+    ---@param conId any
+    remove = function(conId)
+        if not(conId) or not(data.conTransfs_indexedBy_conId[conId]) then return end
+        data.conTransfs_indexedBy_conId[conId] = nil
+    end,
+    ---what it says
+    ---@param isEnabled any
+    setUndoButtonEnabled = function(isEnabled)
+        local button = api.gui.util.getById(constants.guiIds.undoButton)
+        if not(button) then return end
+
+        local isExit = false
+        while not(isExit) do
+            local buttonContent = button:getLayout():getItem(0)
+            if not(buttonContent) then
+                isExit = true
+            else
+                button:getLayout():removeItem(buttonContent)
+            end
+        end
+        if not(isEnabled) then
+            button:setEnabled(false)
+            button:getLayout():addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_disabled.tga'))
+        else
+            button:setEnabled(true)
+            button:getLayout():addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_enabled.tga'))
+        end
+    end
+}
+---removes a construction from the buffer and disables the undo button of its window - it uses the window name to match windows to constructions
+---@param conId integer
+utils.undoBuffer.removeCon = function(conId)
+    utils.undoBuffer.remove(conId)
+
+    local window = api.gui.util.getById(constants.guiIds.moveWindow)
+    if not(window) or window:getName() ~= tostring(conId) then return end
+
+    utils.undoBuffer.setUndoButtonEnabled(false)
+end
 
 return {
+    ---brings up the move window
+    ---@param conId integer
+    ---@param callback showMoveWindowCallback
     showMoveWindow = function(conId, callback)
+        local conTransf = utils.undoBuffer.init(conId)
+
         local layout = api.gui.layout.AbsoluteLayout.new()
         local window = api.gui.util.getById(constants.guiIds.moveWindow)
         local windowTitle = _texts.moveWindowTitle .. ' - ' .. _texts.conId .. tostring(conId)
         if window == nil then
+            logger.print('showMoveWindow starting, creating the window')
             window = api.gui.comp.Window.new(windowTitle, layout)
             window:setId(constants.guiIds.moveWindow)
+            window:setName(tostring(conId))
             window:setSize(api.gui.util.Size.new(data.windowSizeX, data.windowSizeY))
         else
+            logger.print('showMoveWindow starting, window exists')
             window:setTitle(windowTitle)
             window:setContent(layout)
+            window:setName(tostring(conId))
             window:setVisible(true, false)
         end
         window:setResizable(true)
         -- window:setHighlighted(true)
 
-        utils.setWindowPosition(window, {x = 0})
+        utils.setWindowPosition(window, {x = 100})
 
         window:addHideOnCloseHandler()
 
@@ -159,10 +250,40 @@ return {
 
         local infoIcon = api.gui.comp.ImageView.new('ui/button/medium/info.tga')
         infoIcon:setTooltip(_texts.note)
-        layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0 + 20, 40, 40))
+        layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0 + 0, 40, 40))
 
         -- layout:addItem(api.gui.comp.TextView.new(_texts.conId .. tostring(conId)), api.gui.util.Rect.new(240, _y0, 100, 40))
 
+        local function addUndoButton()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_disabled.tga'))
+            button:setTooltip(_texts.undo)
+            button:setId(constants.guiIds.undoButton)
+            logger.print('utils.undoBuffer.get(conId) =') logger.debugPrint(utils.undoBuffer.get(conId))
+
+            local bufferConTransf = utils.undoBuffer.get(conId)
+            local isEnableUndo = type(bufferConTransf) == 'table' and type(conTransf) == 'table'
+            if isEnableUndo then
+                isEnableUndo = false
+                for i = 1, 16, 1 do
+---@diagnostic disable-next-line: need-check-nil
+                    if bufferConTransf[i] ~= conTransf[i] then
+                        isEnableUndo = true
+                        break
+                    end
+                end
+            end
+            utils.undoBuffer.setUndoButtonEnabled(isEnableUndo)
+            button:onClick(
+                function()
+                    if not callback(constants.transfNames.undo, 0, data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn, bufferConTransf)
+                    then utils.undoBuffer.removeCon(conId)
+                    else utils.undoBuffer.setUndoButtonEnabled(false)
+                    end
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(165, _y0 + 40, 40, 40))
+        end
         local function addGotoButton()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/design/window-content/locate.tga'))
@@ -246,7 +367,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.traslX, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    if not callback(constants.transfNames.traslX, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 140, 100, 40))
@@ -263,7 +385,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.xPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.traslX, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    if not callback(constants.transfNames.traslX, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 140, 100, 40))
@@ -280,7 +403,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.traslY, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    if not callback(constants.transfNames.traslY, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 180, 100, 40))
@@ -297,7 +421,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.yPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.traslY, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    if not callback(constants.transfNames.traslY, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(100, _y0 + 100, 100, 40))
@@ -308,7 +433,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.traslZ, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    if not callback(constants.transfNames.traslZ, -utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(300, _y0 + 180, 100, 40))
@@ -319,7 +445,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.zPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.traslZ, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    if not callback(constants.transfNames.traslZ, utils.getLinearShift(), data.isIgnoreErrorsOn, data.isAbsoluteNWSEOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(300, _y0 + 100, 100, 40))
@@ -330,7 +457,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.rotX, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 240, 100, 40))
@@ -341,7 +469,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotXPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.rotX, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 240, 100, 40))
@@ -352,7 +481,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.rotY, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 280, 100, 40))
@@ -363,7 +493,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotYPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.rotY, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 280, 100, 40))
@@ -374,7 +505,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.rotZ, -utils.getRotShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 320, 100, 40))
@@ -385,7 +517,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.rotZPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.rotZ, utils.getRotShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 320, 100, 40))
@@ -396,7 +529,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleXMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.scaleX, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.scaleX, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 380, 100, 40))
@@ -407,7 +541,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleXPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.scaleX, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.scaleX, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 380, 100, 40))
@@ -418,7 +553,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleYMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.scaleY, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.scaleY, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 420, 100, 40))
@@ -429,7 +565,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleYPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.scaleY, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.scaleY, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 420, 100, 40))
@@ -440,7 +577,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleZMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.scaleZ, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.scaleZ, 1 / utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 460, 100, 40))
@@ -451,7 +589,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.scaleZPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.scaleZ, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.scaleZ, utils.getScaleShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 460, 100, 40))
@@ -462,7 +601,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXZMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.skewXZ, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.skewXZ, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 520, 100, 40))
@@ -473,7 +613,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXZPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.skewXZ, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.skewXZ, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 520, 100, 40))
@@ -484,7 +625,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewYZMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.skewYZ, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.skewYZ, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 560, 100, 40))
@@ -495,7 +637,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewYZPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.skewYZ, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.skewYZ, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 560, 100, 40))
@@ -506,7 +649,8 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXYMinus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.skewXY, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.skewXY, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 600, 100, 40))
@@ -517,12 +661,14 @@ return {
             buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXYPlus))
             button:onClick(
                 function()
-                    callback(constants.transfNames.skewXY, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    if not callback(constants.transfNames.skewXY, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                    then utils.undoBuffer.removeCon(conId) else utils.undoBuffer.setUndoButtonEnabled(true) end
                 end
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 600, 100, 40))
         end
 
+        addUndoButton()
         addGotoButton()
         addAbsoluteNWSEToggleButton()
         addIgnoreErrorsToggleButton()

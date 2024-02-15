@@ -1,12 +1,14 @@
 local constants = {
     bigLinearShift = 1.0, -- 1 metre
+    smallLinearShift = 0.025,
     bigRotShift = math.pi / 16, -- like in the game with <m> and <n>
-    smallLinearShift = 0.05,
     smallRotShift = math.pi / 320,
-    scaleShift = 1.05,
+    smallScaleShift = 1.004,
+    bigScaleShift = 1.04,
     scaleMax = 2,
     scaleMin = 0.5,
-    skewShift = 0.05,
+    smallSkewShift = 0.005,
+    bigSkewShift = 0.05,
     skewCosMax = 0.7,
 
     idTransf = {1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1},
@@ -29,6 +31,7 @@ local constants = {
         traslX = 'traslX',
         traslY = 'traslY',
         traslZ = 'traslZ',
+        undo = 'undo',
     },
     transfTypes = {
         none = 'none',
@@ -36,6 +39,7 @@ local constants = {
         scale = 'scale',
         trasl = 'trasl',
         skew = 'skew',
+        undo = 'undo',
     },
 
     guiIds = {
@@ -47,6 +51,7 @@ local constants = {
         },
         operationOnOffButton = 'lollo_con_mover_on_off_button',
         moveWindow = 'lollo_con_mover_move_window',
+        undoButton = 'lollo_con_mover_undo_button',
         warningWindowWithMessage = 'lollo_con_mover_warning_window_with_message',
         warningWindowWithState = 'lollo_con_mover_warning_window_with_state',
     }

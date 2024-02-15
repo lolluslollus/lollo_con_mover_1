@@ -7,6 +7,7 @@ local stateHelpers = require ('lolloConMover.stateHelpers')
 local transfUtilsUG = require('transf')
 local utils = require('lolloConMover.utils')
 
+---@alias showMoveWindowCallback fun(fieldName: string, fieldValue: number, isIgnoreErrors: boolean, isAbsoluteNWSE: boolean, forcedTransf: table): boolean
 
 local function _sendScriptEvent(name, args)
     api.cmd.sendCommand(api.cmd.make.sendScriptEvent(
@@ -46,8 +47,18 @@ return {
             function()
                 guiHelpers.showMoveWindow(
                     _conId,
-                    function(fieldName, fieldValue, isIgnoreErrors, isAbsoluteNWSE)
+                    ---callback for guiHelpers, it validates and fires an event for the worker thread
+                    ---@type showMoveWindowCallback
+                    function(fieldName, fieldValue, isIgnoreErrors, isAbsoluteNWSE, forcedTransf)
                         logger.print('showMoveWindow callback firing, isAbsoluteNWSE = ' .. tostring(isAbsoluteNWSE))
+                        -- LOLLO NOTE must read the con transf again coz it does not carry over - so I can make a simple validation
+                        local _con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
+                        if not(_con) then return false end
+
+                        if fieldName == constants.transfNames.undo and type(forcedTransf) ~= 'table' then return false end
+
+                        -- if true then return false end -- remove after testing
+
                         local refTransf = constants.idTransf
                         if not(isAbsoluteNWSE) then
                             local cameraData = game.gui.getCamera() -- UG TODO the api does not work
@@ -62,8 +73,6 @@ return {
                                 refTransf = transfUtilsUG.rotZ(cameraRotZ + math.pi / 2)
                             end
                         else
-                            -- LOLLO NOTE must read the con transf again coz it does not carry over
-                            local _con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
                             refTransf = transfUtilsUG.new(_con.transf:cols(0), _con.transf:cols(1), _con.transf:cols(2), {x = 0, y = 0, z = 0, w = 1})
                         end
                         _sendScriptEvent(
@@ -72,9 +81,11 @@ return {
                                 refTransf = refTransf,
                                 conId = _conId,
                                 [fieldName] = fieldValue,
-                                isIgnoreErrors = isIgnoreErrors and true or false
+                                isIgnoreErrors = isIgnoreErrors and true or false,
+                                forcedTransf = forcedTransf
                             }
                         )
+                        return true
                     end
                 )
             end,

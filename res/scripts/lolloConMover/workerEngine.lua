@@ -57,8 +57,7 @@ local _getNewSkewTransf = function(oldConTransf, deltaTransf)
     local posSEH = transfUtils.getVec123Transformed({0.5, -0.5, 0.5}, newConTransf)
     local posNEH = transfUtils.getVec123Transformed({0.5, 0.5, 0.5}, newConTransf)
     -- local posNWH = transfUtils.getVec123Transformed({-0.5, 0.5, 0.5}, newConTransf)
--- LOLLO TODO fix these estimators
--- they look OK now, but rotation and skew combine in funny ways, so I'd need an undo feature!
+    -- LOLLO NOTE these estimators look OK, but rotation and skew combine in funny ways, so I need the undo feature
     -- check XY skew
     local lengthXY1 = transfUtils.getPositionsDistance({posSWL[1], posSWL[2], 0}, {posSEL[1], posSEL[2], 0})
     local lengthXY2 = transfUtils.getPositionsDistance({posSEL[1], posSEL[2], 0}, {posNEL[1], posNEL[2], 0})
@@ -137,6 +136,7 @@ local actions = {
     end,
 }
 actions.moveConstruction = function(conId, deltaTransf, transfType, isIgnoreErrors, forcedConTransf)
+    -- LOLLO NOTE this func might call itself so it must stay out of actions {}
     if not(utils.isValidAndExistingId(conId)) then
         logger.print('moveConstruction cannot move construction with id =', conId or 'NIL', 'because it is not valid or does not exist')
         return
@@ -304,11 +304,15 @@ return {
                             conId = 32148,
                             isIgnoreErrors = true,
                             traslX = -1,
+                            forcedTransf = forcedTransf, -- only by undo
                         }
                     ]]
                     local transfType = constants.transfTypes.none
                     local deltaTransf = nil
-                    if args[constants.transfNames.rotX] then
+                    if args[constants.transfNames.undo] then
+                        deltaTransf = constants.idTransf
+                        transfType = constants.transfTypes.undo
+                    elseif args[constants.transfNames.rotX] then
                         deltaTransf = transfUtilsUG.rotX(args[constants.transfNames.rotX])
                         transfType = constants.transfTypes.rot
                     elseif args[constants.transfNames.rotY] then
@@ -356,7 +360,7 @@ return {
                     end
 
                     logger.print('transfType = ', transfType, ', deltaTransf before moving =') logger.debugPrint(deltaTransf)
-                    actions.moveConstruction(args.conId, deltaTransf, transfType, args.isIgnoreErrors)
+                    actions.moveConstruction(args.conId, deltaTransf, transfType, args.isIgnoreErrors, args.forcedTransf)
                 elseif name == constants.events.toggle_notaus then
                     logger.print('toggle_notaus fired, state before =') logger.debugPrint(stateHelpers.getState())
                     local state = stateHelpers.getState()
