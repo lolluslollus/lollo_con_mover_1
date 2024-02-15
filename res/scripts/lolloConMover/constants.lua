@@ -7,7 +7,7 @@ local constants = {
     scaleMax = 2,
     scaleMin = 0.5,
     skewShift = 0.05,
-    skewMax = 5,
+    skewCosMax = 0.7,
 
     idTransf = {1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1},
 
@@ -23,9 +23,9 @@ local constants = {
         scaleX = 'scaleX',
         scaleY = 'scaleY',
         scaleZ = 'scaleZ',
-        skewX = 'skewX',
-        skewY = 'skewY',
-        skewZ = 'skewZ',
+        skewXY = 'skewXY',
+        skewXZ = 'skewXZ',
+        skewYZ = 'skewYZ',
         traslX = 'traslX',
         traslY = 'traslY',
         traslZ = 'traslZ',

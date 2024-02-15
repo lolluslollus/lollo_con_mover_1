@@ -27,11 +27,11 @@ local _getNewScaleTransf = function(oldConTransf, deltaTransf)
     local lengthY = transfUtils.getPositionsDistance(posY0, posY1)
     local lengthZ = transfUtils.getPositionsDistance(posZ0, posZ1)
     if logger.isExtendedLog() then
-        print('positions =')
+        print('_getNewScaleTransf calculated positions =')
         debugPrint(posX0) debugPrint(posX1)
         debugPrint(posY0) debugPrint(posY1)
         debugPrint(posZ0) debugPrint(posZ1)
-        print('lengths = ' .. tostring(lengthX) .. ' ' .. lengthY .. ' ' .. lengthZ .. ' ')
+        print('_getNewScaleTransf calculated lengths = ' .. tostring(lengthX) .. ' ' .. lengthY .. ' ' .. lengthZ .. ' ')
     end
 
     if lengthX < constants.scaleMin or lengthX > constants.scaleMax
@@ -47,15 +47,50 @@ end
 local _getNewSkewTransf = function(oldConTransf, deltaTransf)
     -- this skews the construction around its own axes,
     -- not around the world axes.
-    if deltaTransf[3] > constants.skewMax
-    or deltaTransf[7] > constants.skewMax
-    -- or deltaTransf[9] > constants.skewMax
-    then
-        logger.print('_getNewSkewTransf wants to leave')
+    local newConTransf = transfUtilsUG.mul(oldConTransf, deltaTransf)
+    -- make a cube to estimate the skews. Its vertexes are North West Low, South East High etc
+    local posSWL = transfUtils.getVec123Transformed({-0.5, -0.5, -0.5}, newConTransf)
+    local posSEL = transfUtils.getVec123Transformed({0.5, -0.5, -0.5}, newConTransf)
+    local posNEL = transfUtils.getVec123Transformed({0.5, 0.5, -0.5}, newConTransf)
+    -- local posNWL = transfUtils.getVec123Transformed({-0.5, 0.5, -0.5}, newConTransf)
+    -- local posSWH = transfUtils.getVec123Transformed({-0.5, -0.5, 0.5}, newConTransf)
+    local posSEH = transfUtils.getVec123Transformed({0.5, -0.5, 0.5}, newConTransf)
+    local posNEH = transfUtils.getVec123Transformed({0.5, 0.5, 0.5}, newConTransf)
+    -- local posNWH = transfUtils.getVec123Transformed({-0.5, 0.5, 0.5}, newConTransf)
+-- LOLLO TODO fix these estimators
+-- they look OK now, but rotation and skew combine in funny ways, so I'd need an undo feature!
+    -- check XY skew
+    local lengthXY1 = transfUtils.getPositionsDistance({posSWL[1], posSWL[2], 0}, {posSEL[1], posSEL[2], 0})
+    local lengthXY2 = transfUtils.getPositionsDistance({posSEL[1], posSEL[2], 0}, {posNEL[1], posNEL[2], 0})
+    local lengthXY3 = transfUtils.getPositionsDistance({posNEL[1], posNEL[2], 0}, {posSWL[1], posSWL[2], 0})
+    local cosXY = (lengthXY1 * lengthXY1 + lengthXY2 * lengthXY2 - lengthXY3 * lengthXY3) / 2 / lengthXY1 / lengthXY2
+    logger.print('_getNewSkewTransf found cosXY = ' .. tostring(cosXY))
+    if math.abs(cosXY) > constants.skewCosMax then
+        logger.print('_getNewSkewTransf wants to leave because it does not want to go out of bounds')
+        return nil
+    end
+    -- check XZ skew
+    local lengthXZ1 = transfUtils.getPositionsDistance({posSWL[1], 0, posSWL[3]}, {posSEL[1], 0, posSEL[3]})
+    local lengthXZ2 = transfUtils.getPositionsDistance({posSEL[1], 0, posSEL[3]}, {posSEH[1], 0, posSEH[3]})
+    local lengthXZ3 = transfUtils.getPositionsDistance({posSEH[1], 0, posSEH[3]}, {posSWL[1], 0, posSWL[3]})
+    local cosXZ = (lengthXZ1 * lengthXZ1 + lengthXZ2 * lengthXZ2 - lengthXZ3 * lengthXZ3) / 2 / lengthXZ1 / lengthXZ2
+    logger.print('_getNewSkewTransf found cosXZ = ' .. tostring(cosXZ))
+    if math.abs(cosXZ) > constants.skewCosMax then
+        logger.print('_getNewSkewTransf wants to leave because it does not want to go out of bounds')
+        return nil
+    end
+    -- check YZ skew
+    local lengthYZ1 = transfUtils.getPositionsDistance({0, posSEL[2], posSEL[3]}, {0, posNEL[2], posNEL[3]})
+    local lengthYZ2 = transfUtils.getPositionsDistance({0, posNEL[2], posNEL[3]}, {0, posNEH[2], posNEH[3]})
+    local lengthYZ3 = transfUtils.getPositionsDistance({0, posNEH[2], posNEH[3]}, {0, posSEL[2], posSEL[3]})
+    local cosYZ = (lengthYZ1 * lengthYZ1 + lengthYZ2 * lengthYZ2 - lengthYZ3 * lengthYZ3) / 2 / lengthYZ1 / lengthYZ2
+    logger.print('_getNewSkewTransf found cosYZ = ' .. tostring(cosYZ))
+    if math.abs(cosYZ) > constants.skewCosMax then
+        logger.print('_getNewSkewTransf wants to leave because it does not want to go out of bounds')
         return nil
     end
 
-    local newConTransf = transfUtilsUG.mul(oldConTransf, deltaTransf)
+    logger.print('_getNewSkewTransf is about to return newConTransf =') logger.debugPrint(newConTransf)
     return newConTransf
 end
 local _getNewTraslTransf = function(oldConTransf, deltaTransf)
@@ -158,8 +193,6 @@ actions.moveConstruction = function(conId, deltaTransf, transfType, isIgnoreErro
     )
 
     newCon.playerEntity = api.engine.util.getPlayer() -- otherwise, I cannot select it again
-
-    -- newCon.headquarters = oldCon.fileName == 'asset/headquarter.con' -- LOLLO TODO check what to do when moving headquarters
 
     local proposal = api.type.SimpleProposal.new()
     -- LOLLO NOTE there are asymmetries how different tables are handled.
@@ -293,6 +326,15 @@ return {
                     elseif args[constants.transfNames.scaleZ] then
                         deltaTransf = transfUtilsUG.scale({x = 1, y = 1, z = args[constants.transfNames.scaleZ]})
                         transfType = constants.transfTypes.scale
+                    elseif args[constants.transfNames.skewXZ] then
+                        deltaTransf = transfUtils.getTransf_XSkewedOnZ(constants.idTransf, args[constants.transfNames.skewXZ])
+                        transfType = constants.transfTypes.skew
+                    elseif args[constants.transfNames.skewYZ] then
+                        deltaTransf = transfUtils.getTransf_YSkewedOnZ(constants.idTransf, args[constants.transfNames.skewYZ])
+                        transfType = constants.transfTypes.skew
+                    elseif args[constants.transfNames.skewXY] then
+                        deltaTransf = transfUtils.getTransf_XSkewedOnY(constants.idTransf, args[constants.transfNames.skewXY])
+                        transfType = constants.transfTypes.skew
                     else
                         logger.print('args.refTransf =') logger.debugPrint(args.refTransf)
                         deltaTransf = {

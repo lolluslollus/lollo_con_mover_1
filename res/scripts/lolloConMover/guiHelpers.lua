@@ -46,7 +46,7 @@ local data = {
     isIgnoreErrorsOn = true,
     isShowingWarning = false,
     windowSizeX = 400,
-    windowSizeY = 560,
+    windowSizeY = 720,
 }
 
 local utils = {
@@ -456,6 +456,73 @@ return {
             )
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 460, 100, 40))
         end
+        local function addSkewXZMinus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/skew_minus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXZMinus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.skewXZ, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 520, 100, 40))
+        end
+        local function addSkewXZPlus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/skew_plus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXZPlus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.skewXZ, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 520, 100, 40))
+        end
+        local function addSkewYZMinus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/skew_minus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewYZMinus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.skewYZ, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 560, 100, 40))
+        end
+        local function addSkewYZPlus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/skew_plus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewYZPlus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.skewYZ, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 560, 100, 40))
+        end
+        local function addSkewXYMinus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/skew_minus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXYMinus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.skewXY, -utils.getSkewShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(10, _y0 + 600, 100, 40))
+        end
+        local function addSkewXYPlus1Button()
+            local button, buttonLayout = utils.getButtonAndItsLayout()
+            buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/skew_plus.tga'))
+            buttonLayout:addItem(api.gui.comp.TextView.new(_texts.skewXYPlus))
+            button:onClick(
+                function()
+                    callback(constants.transfNames.skewXY, utils.getSkewShift(), data.isIgnoreErrorsOn)
+                end
+            )
+            layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 600, 100, 40))
+        end
+
         addGotoButton()
         addAbsoluteNWSEToggleButton()
         addIgnoreErrorsToggleButton()
@@ -478,6 +545,12 @@ return {
         addScaleYPlus1Button()
         addScaleZMinus1Button()
         addScaleZPlus1Button()
+        addSkewXZMinus1Button()
+        addSkewXZPlus1Button()
+        addSkewYZMinus1Button()
+        addSkewYZPlus1Button()
+        addSkewXYMinus1Button()
+        addSkewXYPlus1Button()
     end,
 
     showWarningWindowWithMessage = function(text)
