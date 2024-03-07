@@ -6,8 +6,8 @@ local utils = require('lolloConMover.utils')
 
 
 local funcs = {
-    isConTypeAllowed = function(data)
-        -- logger.print('isConTypeAllowed starting')
+    isConAllowed_basedOnType = function(data)
+        -- logger.print('isConAllowed_basedOnType starting')
         for _, cty in pairs(conTypeWhitelist) do
             if data.type == cty then return true end
         end
@@ -65,7 +65,7 @@ funcs.loadConstructionFunc = function (fileName, data)
     if not(data) or (type(data.updateFn) ~= 'function') or type(fileName) ~= 'string' then return data end
 
     -- whitelist constructions of certain types
-    if not(funcs.isConTypeAllowed(data)) then return data end
+    if not(funcs.isConAllowed_basedOnType(data)) then return data end
 
     -- blacklist some constructions, which are known to make trouble.
     if not(funcs.isConAllowed_basedOnFileName(fileName)) then return data end
