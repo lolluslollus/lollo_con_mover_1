@@ -1,13 +1,14 @@
 -- NOTE that the state must be read-only here coz we are in the GUI thread
 local conChooser = require('lolloConMover.conChooser')
 local constants = require('lolloConMover.constants')
+local edgeUtilsDumb = require('lolloConMover.utils')
 local guiHelpers = require('lolloConMover.guiHelpers')
 local logger = require('lolloConMover.logger')
 local stateHelpers = require ('lolloConMover.stateHelpers')
 local transfUtilsUG = require('transf')
 local utils = require('lolloConMover.utils')
 
----@alias showMoveWindowCallback fun(fieldName: string, fieldValue: number, isIgnoreErrors: boolean, isAbsoluteNWSE: boolean, forcedTransf: table): boolean
+---@alias showMoveWindowCallback fun(fieldName: string, fieldValue: number, isIgnoreErrors: boolean, isAbsoluteNWSE: boolean|nil, forcedTransf: table|nil): boolean
 
 local function _sendScriptEvent(name, args)
     api.cmd.sendCommand(api.cmd.make.sendScriptEvent(
@@ -24,7 +25,7 @@ return {
         if not(_state) or not(_state.is_on) then return end
 
         local _conId = args
-        if not(_conId) or not(utils.isValidAndExistingId(_conId)) then return end
+        if not(utils.isValidAndExistingId(_conId)) then return end
 
         local con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
         if not(con) or not(con.fileName) then return end
@@ -52,6 +53,8 @@ return {
                     function(fieldName, fieldValue, isIgnoreErrors, isAbsoluteNWSE, forcedTransf)
                         logger.print('showMoveWindow callback firing, isAbsoluteNWSE = ' .. tostring(isAbsoluteNWSE))
                         -- LOLLO NOTE must read the con transf again coz it does not carry over - so I can make a simple validation
+                        if not(edgeUtilsDumb.isValidAndExistingId(_conId)) then return false end
+
                         local _con = api.engine.getComponent(_conId, api.type.ComponentType.CONSTRUCTION)
                         if not(_con) then return false end
 
