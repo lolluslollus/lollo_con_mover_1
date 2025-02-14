@@ -198,10 +198,10 @@ utils.undoBuffer = {
         end
         if not(isEnabled) then
             button:setEnabled(false)
-            button:getLayout():addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_disabled.tga'))
+            button:getLayout():addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_disabled.tga'), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
         else
             button:setEnabled(true)
-            button:getLayout():addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_enabled.tga'))
+            button:getLayout():addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_enabled.tga'), api.gui.util.Alignment.HORIZONTAL, api.gui.util.Alignment.VERTICAL)
         end
     end
 }
@@ -248,12 +248,11 @@ return {
 
         local _y0 = 15
 
-        local infoIcon = api.gui.comp.ImageView.new('ui/button/medium/info.tga')
-        infoIcon:setTooltip(_texts.note)
-        layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0 + 0, 40, 40))
-
-        -- layout:addItem(api.gui.comp.TextView.new(_texts.conId .. tostring(conId)), api.gui.util.Rect.new(240, _y0, 100, 40))
-
+        local function addInfoIcon()
+            local infoIcon = api.gui.comp.ImageView.new('ui/button/medium/info.tga')
+            infoIcon:setTooltip(_texts.note)
+            layout:addItem(infoIcon, api.gui.util.Rect.new(160, _y0 + 0, 40, 40))
+        end
         local function addUndoButton()
             local button, buttonLayout = utils.getButtonAndItsLayout()
             buttonLayout:addItem(api.gui.comp.ImageView.new('ui/lolloConMover/undo_disabled.tga'))
@@ -668,6 +667,7 @@ return {
             layout:addItem(button, api.gui.util.Rect.new(190, _y0 + 600, 100, 40))
         end
 
+        addInfoIcon()
         addUndoButton()
         addGotoButton()
         addAbsoluteNWSEToggleButton()
