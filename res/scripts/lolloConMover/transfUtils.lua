@@ -1178,9 +1178,8 @@ utils.get1MModelTransf = function(pos1, pos2)
 end
 
 -- gets a transf to fit something with length xObjectLength between two positions. x size is scaled, y and z sizes are preserved
-utils.getTransf2FitObjectBetweenPositions = function(pos0, pos1, xObjectLength, logger)
+utils.getTransf2FitObjectBetweenPositions = function(pos0, pos1, xObjectLength, isExtendedLog)
     local _absX0I = xObjectLength / 2
-    local _logger = logger == nil and {print = function() end, debugPrint = function() end, getIsExtendedLog = function() return false end} or logger
     local x0 = pos0.x or pos0[1]
     local x1 = pos1.x or pos1[1]
     local y0 = pos0.y or pos0[2]
@@ -1195,7 +1194,9 @@ utils.getTransf2FitObjectBetweenPositions = function(pos0, pos1, xObjectLength, 
     local ipotenusaYX = math.sqrt((x1 - x0)^2 + (y1 - y0)^2)
     local sinYX = (y1-y0) / ipotenusaYX
     local cosYX = (x1-x0) / ipotenusaYX
-    _logger.print('ipotenusaYX =', ipotenusaYX, 'sinYX =', sinYX, 'cosYX =', cosYX)
+    if isExtendedLog then
+        print('ipotenusaYX =', ipotenusaYX, 'sinYX =', sinYX, 'cosYX =', cosYX)
+    end
     local vecY0 = {0, 1, 0} -- transforms to {xMid - sinYX, yMid + cosYX, zMid}
     local vecZ0 = {0, 0, 1} -- transforms to {xMid, yMid, zMid + 1}
     local vecZTilted = {0, 0, 1} -- transforms to
@@ -1236,7 +1237,9 @@ utils.getTransf2FitObjectBetweenPositions = function(pos0, pos1, xObjectLength, 
     unknownTransf[9] = 0
     unknownTransf[10] = 0
     unknownTransf[11] = 1
-    _logger.print('unknownTransf straight =') _logger.debugPrint(unknownTransf)
+    if isExtendedLog then
+        print('unknownTransf straight =') debugPrint(unknownTransf)
+    end
     -- solving for vecZ0 tilted
     -- this makes buildings perpendicular to the road, the points match. Curves seem to get less angry.
     -- LOLLO TODO these three are fine for the edges but tilt the construction models, the con should compensate for it
@@ -1246,15 +1249,18 @@ utils.getTransf2FitObjectBetweenPositions = function(pos0, pos1, xObjectLength, 
     unknownTransf[10] = -math.sin(math.atan2((z1-z0), (ipotenusaYX))) * sinYX
     -- zMid +math.cos(math.atan2((z1-z0), (ipotenusaYX))) = unknownTransf[11] + zMid
     unknownTransf[11] = math.cos(math.atan2((z1-z0), (ipotenusaYX)))
-    _logger.print('unknownTransf tilted =') _logger.debugPrint(unknownTransf)
-
+    if isExtendedLog then
+        print('unknownTransf tilted =') debugPrint(unknownTransf)
+    end
     local result = unknownTransf
-    _logger.print('result =') _logger.debugPrint(result)
+    if isExtendedLog then
+        print('result =') debugPrint(result)
+    end
     local vecX0Transformed = utils.getVecTransformed(utils.oneTwoThree2XYZ(vecX0), result)
     local vecX1Transformed = utils.getVecTransformed(utils.oneTwoThree2XYZ(vecX1), result)
     local vecYTransformed = utils.getVecTransformed(utils.oneTwoThree2XYZ(vecY0), result)
     local vecZ0Transformed = utils.getVecTransformed(utils.oneTwoThree2XYZ(vecZ0), result)
-    if _logger.getIsExtendedLog() then
+    if isExtendedLog then
         print('vecX0 straight and transformed =') debugPrint(vecX0) debugPrint(vecX0Transformed)
         print('should be') debugPrint({x0, y0, z0})
         print('vecX1 straight and transformed =') debugPrint(vecX1) debugPrint(vecX1Transformed)
@@ -1414,6 +1420,15 @@ utils.getDistanceBetweenPointAndStraight = function(segmentPosition1, segmentPos
         return math.abs(yM - y1 + (y1 - y2) / (x1 - x2) * (x1 - xM)) / math.sqrt(1 + (y1 - y2) / (x1 - x2) * (y1 - y2) / (x1 - x2))
     end
 
+    --[[
+    float dist_to_segment_squared(float px, float py, float pz, float lx1, float ly1, float lz1, float lx2, float ly2, float lz2) {
+    float line_dist = dist_sq(lx1, ly1, lz1, lx2, ly2, lz2);
+    if (line_dist == 0) return dist_sq(px, py, pz, lx1, ly1, lz1);
+    float t = ((px - lx1) * (lx2 - lx1) + (py - ly1) * (ly2 - ly1) + (pz - lz1) * (lz2 - lz1)) / line_dist;
+    t = constrain(t, 0, 1);
+    return dist_sq(px, py, pz, lx1 + t * (lx2 - lx1), ly1 + t * (ly2 - ly1), lz1 + t * (lz2 - lz1));
+    }
+]]
 end
 
 return utils
